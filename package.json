@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "cards": "bun scripts/generate-vocab-cards.mjs",
         "preview": "vite preview",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",

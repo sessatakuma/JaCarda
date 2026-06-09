@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Data fixtures
+*.csv
+
 # IDE files
 .vscode/
 
