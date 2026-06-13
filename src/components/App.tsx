@@ -183,6 +183,10 @@ export function App(): JSX.Element {
     async function writeSheetRow(
         payload: Partial<VocabCard> & { rowNumber: number }
     ): Promise<void> {
+        if (!sheetUrl.trim()) {
+            throw new Error(t('errors.sheetMissing'));
+        }
+
         if (!webhookUrl.trim()) {
             throw new Error(t('errors.webhookMissing'));
         }
@@ -448,9 +452,6 @@ export function App(): JSX.Element {
                                     ? t('actions.saving')
                                     : t('actions.saveEdit')}
                             </AppButton>
-                            {usedMessage ? (
-                                <p className='used-message'>{usedMessage}</p>
-                            ) : null}
                         </section>
 
                         <section
@@ -477,6 +478,11 @@ export function App(): JSX.Element {
                             </AppButton>
                         </section>
                     </div>
+                    {usedMessage ? (
+                        <p className='studio-message' role='status'>
+                            {usedMessage}
+                        </p>
+                    ) : null}
                 </section>
             </main>
             <Footer />

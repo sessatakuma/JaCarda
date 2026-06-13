@@ -41,6 +41,7 @@ const resources = {
                 downloadPng: 'Could not download PNG.',
                 pngCanceled: 'PNG download canceled.',
                 saveSheet: 'Could not save edits back to Google Sheets.',
+                sheetMissing: 'Connect a Google Sheet before saving.',
                 usedAtSheet: 'Could not write used date back to Google Sheets.',
                 webhookMissing:
                     'Add an Apps Script webhook in Connect Google Sheet before saving.',
@@ -119,6 +120,7 @@ const resources = {
                 downloadPng: '無法下載 PNG。',
                 pngCanceled: '已取消 PNG 下載。',
                 saveSheet: '無法將編輯儲存回 Google 試算表。',
+                sheetMissing: '儲存前，請先連接 Google 試算表。',
                 usedAtSheet: '無法將使用日期寫回 Google 試算表。',
                 webhookMissing:
                     '儲存前，請先在連接 Google 試算表中加入 Apps Script webhook。',

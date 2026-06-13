@@ -127,6 +127,8 @@ button:disabled {
     padding: calc(var(--space-7) + var(--space-4)) var(--space-6);
     height: calc(100vh - var(--nav-height));
     display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    row-gap: var(--space-4);
 }
 
 .studio-grid {
@@ -134,9 +136,7 @@ button:disabled {
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.45fr);
     gap: var(--space-6);
     align-items: stretch;
-    height: calc(
-        100vh - var(--nav-height) - ((var(--space-7) + var(--space-4)) * 2)
-    );
+    height: 100%;
     min-height: 0;
 }
 
@@ -195,9 +195,13 @@ button:disabled {
     width: fit-content;
 }
 
-.used-message {
+.studio-message {
+    justify-self: center;
+    margin: 0;
+    min-height: var(--space-5);
     color: var(--color-text-secondary);
     font-size: 0.875rem;
+    text-align: center;
 }
 
 .row-list {
