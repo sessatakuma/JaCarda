@@ -3,11 +3,23 @@
 
     --clr-bg: #f7f4ee;
     --clr-bg-accent: rgba(159, 75, 46, 0.1);
+    --clr-bg-card: #fbfbfb;
     --clr-surface: #fffdf9;
     --clr-surface-elevated: color-mix(in srgb, var(--clr-surface) 88%, white);
     --clr-text: #1f1d1a;
     --clr-text-muted: #66605a;
+    --clr-text-soft: #596579;
     --clr-border: #d9d1c7;
+    --clr-border-strong: color-mix(
+        in srgb,
+        var(--clr-border) 70%,
+        var(--clr-text)
+    );
     --clr-accent: #9f4b2e;
+    --clr-card-accent: #6da58e;
+    --clr-error: #a23825;
+    --clr-success: #3f7d5a;
+    --clr-warning: #a46a20;
     --shadow-surface: 0 24px 48px rgba(31, 29, 26, 0.08);
+    --shadow-card: 0 32px 80px rgba(31, 29, 26, 0.14);
 }

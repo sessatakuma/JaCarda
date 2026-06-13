@@ -14,6 +14,10 @@ bun install
 bun run dev
 ```
 
+The web app can connect to a public/exportable Google Sheet, show the connected
+CSV export URL, preview generated cards, let you edit the selected row locally,
+and download the current card as SVG.
+
 ## Check
 
 ```bash
@@ -29,7 +33,15 @@ bun run cards examples/vocab-cards.csv dist/cards
 ```
 
 The card generator reads CSV rows with `type`, `phrase`, `meaning`, and
-`sentence` columns. `例句` and `©2026 Sessatakuma` are fixed template text.
+`sentence` columns. The input can be a local CSV file, a direct CSV URL, or a
+public/exportable Google Sheet URL:
+
+```bash
+bun run cards "https://docs.google.com/spreadsheets/d/<sheet-id>/edit#gid=0" dist/cards
+```
+
+Google Sheets must be public, published to the web, or otherwise exportable
+without browser login. `例句` and `©2026 Sessatakuma` are fixed template text.
 
 The source Affinity file is a private binary document. It was opened in the
 macOS Affinity app after direct parsing failed; the script follows the exposed

@@ -88,12 +88,13 @@ const COLUMN_ALIASES = {
 
 function usage() {
     return [
-        'Usage: bun run cards <input.csv> [output-dir]',
+        'Usage: bun run cards <input.csv|google-sheet-url> [output-dir]',
         '',
         'CSV columns:',
         '  type, phrase, meaning, sentence',
         '',
         'Notes:',
+        '  - Google Sheets must be public, published, or otherwise exportable without login.',
         '  - 例句 and ©2026 Sessatakuma are fixed template text.',
         '  - Separate multiple meanings with newlines, semicolons, or pipes.',
         '  - Output is SVG so the cards stay editable and print-ready.',
@@ -109,9 +110,70 @@ function parseArgs(argv) {
     }
 
     return {
-        input: path.resolve(input),
+        input: isHttpUrl(input) ? input : path.resolve(input),
         output: path.resolve(output),
     };
+}
+
+async function readInputText(input) {
+    if (!isHttpUrl(input)) {
+        return readFile(input, 'utf8');
+    }
+
+    const csvUrl = googleSheetCsvUrl(input) ?? input;
+    const response = await fetch(csvUrl);
+
+    if (!response.ok) {
+        throw new Error(
+            `Could not fetch input URL (${response.status} ${response.statusText}). ` +
+                'If this is a Google Sheet, make it public or publish it to the web.'
+        );
+    }
+
+    const text = await response.text();
+    if (/^\s*<!doctype html/i.test(text) || /<html[\s>]/i.test(text)) {
+        throw new Error(
+            'Input URL returned HTML instead of CSV. For Google Sheets, use a shareable Sheet URL with public access or a published CSV URL.'
+        );
+    }
+
+    return text;
+}
+
+function isHttpUrl(value) {
+    return /^https?:\/\//i.test(value);
+}
+
+function googleSheetCsvUrl(value) {
+    const url = new URL(value);
+
+    if (url.hostname !== 'docs.google.com') {
+        return undefined;
+    }
+
+    if (!url.pathname.includes('/spreadsheets/')) {
+        return undefined;
+    }
+
+    const gid = url.searchParams.get('gid') ?? extractGid(url.hash) ?? '0';
+    const publishedIdMatch = url.pathname.match(
+        /\/spreadsheets\/d\/e\/([^/]+)/
+    );
+    if (publishedIdMatch) {
+        return `https://docs.google.com/spreadsheets/d/e/${publishedIdMatch[1]}/pub?output=csv&gid=${encodeURIComponent(gid)}`;
+    }
+
+    const sheetIdMatch = url.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
+    if (!sheetIdMatch) {
+        return undefined;
+    }
+
+    return `https://docs.google.com/spreadsheets/d/${sheetIdMatch[1]}/export?format=csv&gid=${encodeURIComponent(gid)}`;
+}
+
+function extractGid(hash) {
+    const match = hash.match(/gid=(\d+)/);
+    return match?.[1];
 }
 
 function parseCsv(content) {
@@ -556,7 +618,7 @@ ${links}
 
 async function main() {
     const args = parseArgs(process.argv);
-    const csv = await readFile(args.input, 'utf8');
+    const csv = await readInputText(args.input);
     const records = recordsFromCsv(parseCsv(csv));
 
     await mkdir(args.output, { recursive: true });

@@ -4,6 +4,8 @@
 
     --fs-label: 0.75rem;
     --fs-body: 1rem;
+    --fs-body-sm: 0.875rem;
+    --fs-heading: clamp(1.5rem, 3vw, 2.75rem);
     --fs-title: clamp(2.75rem, 7vw, 5rem);
 
     --fw-medium: 500;
@@ -11,21 +13,30 @@
     --fw-bold: 700;
 
     --font-label: var(--fw-semibold) var(--fs-label) / 1.2 var(--ff-body);
+    --font-body-sm: var(--fw-medium) var(--fs-body-sm) / 1.5 var(--ff-body);
     --font-body-md: var(--fw-medium) var(--fs-body) / 1.6 var(--ff-body);
+    --font-heading: var(--fw-bold) var(--fs-heading) / 1 var(--ff-display);
     --font-display: var(--fw-bold) var(--fs-title) / 0.94 var(--ff-display);
 
     --space-8: 8px;
     --space-12: 12px;
     --space-16: 16px;
+    --space-20: 20px;
     --space-24: 24px;
     --space-32: 32px;
+    --space-40: 40px;
     --space-48: 48px;
     --space-64: 64px;
 
     --size-border-1: 1px;
     --size-outline: 2px;
     --size-content-max: 720px;
+    --size-preview-max: 420px;
+    --size-control-min: 44px;
     --measure-copy: 36ch;
 
+    --radius-12: 12px;
+    --radius-16: 16px;
     --radius-24: 24px;
+    --radius-32: 32px;
 }
