@@ -6,14 +6,7 @@ import {
     type MouseEvent,
     type ReactNode,
 } from 'react';
-import {
-    BookOpenText,
-    Download,
-    Facebook,
-    Instagram,
-    RefreshCw,
-    X,
-} from 'lucide-react';
+import { Download, Facebook, Instagram, RefreshCw, X } from 'lucide-react';
 
 import {
     fetchSheetCards,
@@ -682,15 +675,6 @@ function Nav(): JSX.Element {
                     <span className='title'>JaCarda</span>
                 </a>
             </div>
-            <a
-                className='nav-guide-button'
-                href='#main-content'
-                title='Usage'
-                aria-label='Usage: Sheet rows, editable SVG, export-ready cards.'
-            >
-                <BookOpenText size={20} aria-hidden='true' />
-                <span className='nav-guide-button-label'>Guide</span>
-            </a>
         </header>
     );
 }
