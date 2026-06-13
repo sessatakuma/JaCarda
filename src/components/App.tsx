@@ -21,6 +21,8 @@ import {
 
 const sheetStorageKey = 'jacarda-sheet-url';
 const webhookStorageKey = 'jacarda-sheet-webhook-url';
+const defaultWebhookUrl =
+    'https://script.google.com/macros/s/AKfycby55n93Iru6e6_NOEzDAnMDemveexvXmR0XH6vV0j-mvIYBtH1cVQASxvV-9us1ALc/exec';
 const sampleCards = parseCsvCards(sampleCsv);
 
 type ConnectionState = 'error' | 'loading' | 'ready';
@@ -33,7 +35,9 @@ export function App(): JSX.Element {
     const [cards, setCards] = useState<Array<VocabCard>>(sampleCards);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [webhookUrl, setWebhookUrl] = useState(
-        () => window.localStorage.getItem(webhookStorageKey) ?? ''
+        () =>
+            window.localStorage.getItem(webhookStorageKey)?.trim() ||
+            defaultWebhookUrl
     );
     const [draftWebhookUrl, setDraftWebhookUrl] = useState(webhookUrl);
     const [connectionState, setConnectionState] = useState<ConnectionState>(
@@ -81,14 +85,20 @@ export function App(): JSX.Element {
         setConnectionState('loading');
 
         try {
+            const normalizedWebhookUrl =
+                draftWebhookUrl.trim() || defaultWebhookUrl;
             const nextCards = await fetchSheetCards(normalizedSheetUrl);
             setCards(nextCards);
             setSelectedIndex(0);
             setSheetUrl(normalizedSheetUrl);
             setDraftSheetUrl(normalizedSheetUrl);
             window.localStorage.setItem(sheetStorageKey, normalizedSheetUrl);
-            window.localStorage.setItem(webhookStorageKey, draftWebhookUrl);
-            setWebhookUrl(draftWebhookUrl);
+            window.localStorage.setItem(
+                webhookStorageKey,
+                normalizedWebhookUrl
+            );
+            setDraftWebhookUrl(normalizedWebhookUrl);
+            setWebhookUrl(normalizedWebhookUrl);
             setConnectionState('ready');
             setIsDialogOpen(false);
         } catch (error) {
@@ -168,7 +178,10 @@ export function App(): JSX.Element {
         }
 
         const response = await fetch(webhookUrl.trim(), {
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+                sheetUrl,
+                ...payload,
+            }),
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
@@ -442,8 +455,9 @@ export function App(): JSX.Element {
                                 />
                             </div>
                             <p>
-                                Use a public or published Sheet URL. This stays
-                                on this device.
+                                Paste a public or published Sheet URL. The
+                                deployed Apps Script writeback is already
+                                configured.
                             </p>
                             <label className='sheet-dialog-field'>
                                 <span>Sheet URL</span>

@@ -1,6 +1,18 @@
 function doPost(event) {
-    const payload = JSON.parse(event.postData.contents || '{}');
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    try {
+        return handlePost(event);
+    } catch (error) {
+        return jsonResponse({
+            ok: false,
+            error: error && error.message ? error.message : String(error),
+        });
+    }
+}
+
+function handlePost(event) {
+    const payload = JSON.parse((event.postData || {}).contents || '{}');
+    const spreadsheet = openSpreadsheet(payload);
+    const sheet = spreadsheet.getSheets()[0];
     const rowNumber = Number(payload.rowNumber);
 
     if (!Number.isFinite(rowNumber) || rowNumber < 2) {
@@ -67,6 +79,29 @@ function doPost(event) {
         rowNumber,
         updated,
     });
+}
+
+function openSpreadsheet(payload) {
+    const sheetId =
+        payload.sheetId || sheetIdFromUrl(payload.sheetUrl || payload.url);
+
+    if (sheetId) {
+        return SpreadsheetApp.openById(sheetId);
+    }
+
+    const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (!activeSpreadsheet) {
+        throw new Error('Missing sheetUrl or sheetId');
+    }
+
+    return activeSpreadsheet;
+}
+
+function sheetIdFromUrl(value) {
+    const match = String(value).match(/\/spreadsheets\/d\/([^/?#]+)/);
+
+    return match ? match[1] : '';
 }
 
 function findHeaderRow(sheet) {
