@@ -659,15 +659,132 @@ function phraseBlockMetrics(scale) {
 }
 
 function phraseRubyNode(card, options) {
-    const reading = card.reading ? `<rt>${escapeXml(card.reading)}</rt>` : '';
-
     return [
         `<foreignObject x="${options.x}" y="${options.y}" width="${options.width}" height="${options.height}">`,
         '<div xmlns="http://www.w3.org/1999/xhtml" class="phrase">',
-        `<ruby>${escapeXml(card.phrase)}${reading}</ruby>`,
+        phraseRubyHtml(card.phrase, card.reading),
         '</div>',
         '</foreignObject>',
     ].join('');
+}
+
+function phraseRubyHtml(phrase, reading) {
+    if (!reading.trim()) {
+        return escapeXml(phrase);
+    }
+
+    const segments = phraseSegments(phrase);
+
+    if (!segments.some((segment) => segment.isKanji)) {
+        return escapeXml(phrase);
+    }
+
+    const readingChars = [...reading.trim()];
+    let readingIndex = 0;
+
+    return segments
+        .map((segment, index) => {
+            if (!segment.isKanji) {
+                readingIndex = consumeMatchingReading(
+                    readingChars,
+                    segment.text,
+                    readingIndex
+                );
+
+                return escapeXml(segment.text);
+            }
+
+            const nextPlainSegment = segments
+                .slice(index + 1)
+                .find((candidate) => !candidate.isKanji);
+            const endIndex = nextPlainSegment
+                ? findReadingSegment(
+                      readingChars,
+                      nextPlainSegment.text,
+                      readingIndex
+                  )
+                : readingChars.length;
+            const rubyText = readingChars
+                .slice(readingIndex, endIndex)
+                .join('');
+
+            readingIndex = endIndex;
+
+            if (!rubyText) {
+                return escapeXml(segment.text);
+            }
+
+            return `<ruby>${escapeXml(segment.text)}<rt>${escapeXml(rubyText)}</rt></ruby>`;
+        })
+        .join('');
+}
+
+function phraseSegments(phrase) {
+    const segments = [];
+
+    for (const char of [...phrase]) {
+        const isKanji = isKanjiChar(char);
+        const previous = segments.at(-1);
+
+        if (previous && previous.isKanji === isKanji) {
+            previous.text += char;
+            continue;
+        }
+
+        segments.push({
+            isKanji,
+            text: char,
+        });
+    }
+
+    return segments;
+}
+
+function isKanjiChar(char) {
+    return /[\u3400-\u9fff]/u.test(char);
+}
+
+function consumeMatchingReading(readingChars, text, startIndex) {
+    const matchIndex = findReadingSegment(readingChars, text, startIndex);
+
+    return matchIndex === startIndex
+        ? startIndex + [...text].length
+        : startIndex;
+}
+
+function findReadingSegment(readingChars, text, startIndex) {
+    const target = normalizeKana(text);
+    const targetLength = [...text].length;
+
+    for (let index = startIndex; index <= readingChars.length; index += 1) {
+        const candidate = normalizeKana(
+            readingChars.slice(index, index + targetLength).join('')
+        );
+
+        if (candidate === target) {
+            return index;
+        }
+    }
+
+    return readingChars.length;
+}
+
+function normalizeKana(value) {
+    return [...value]
+        .map((char) => {
+            const codePoint = char.codePointAt(0);
+
+            if (
+                codePoint !== undefined &&
+                codePoint >= 0x30a1 &&
+                codePoint <= 0x30f6
+            ) {
+                return String.fromCodePoint(codePoint - 0x60);
+            }
+
+            return char;
+        })
+        .join('');
 }
 
 function guideX(position) {
