@@ -392,7 +392,7 @@ export function App(): JSX.Element {
                             <label className='edit-field'>
                                 <span>Meaning</span>
                                 <textarea
-                                    rows={5}
+                                    rows={4}
                                     value={selectedCard.meaning}
                                     onChange={(event) => {
                                         updateSelectedCard(
