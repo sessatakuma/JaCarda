@@ -199,58 +199,12 @@ button:disabled {
     grid-template-rows: auto minmax(0, 1fr);
 }
 
-.sheet-status {
-    position: fixed;
-    right: var(--space-6);
-    bottom: var(--space-6);
-    z-index: 150;
-    display: grid;
-    grid-template-columns: var(--space-3) minmax(0, 1fr) auto;
-    gap: var(--space-3);
-    align-items: center;
-    width: min(
-        calc(100vw - (var(--space-6) * 2)),
-        var(--size-sheet-status-max)
-    );
-    padding: var(--space-3);
-    color: var(--color-text-secondary);
-    background: var(--color-accent-green-light);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    box-shadow: var(--shadow-surface);
-}
-
-.sheet-status p {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.sheet-status-dot {
-    width: var(--space-3);
-    height: var(--space-3);
-    border-radius: 50%;
-    background: var(--color-feedback-success);
-}
-
-.sheet-status--loading .sheet-status-dot {
-    background: var(--clr-warning);
-}
-
-.sheet-status--error .sheet-status-dot {
-    background: var(--color-feedback-warning);
-}
-
 .panel-title {
     color: var(--color-accent-green);
     font-size: 1.375rem;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.01em;
-}
-
-.sheet-settings-button {
-    min-width: calc(var(--space-6) + var(--space-2));
-    padding: 0;
 }
 
 .used-message {

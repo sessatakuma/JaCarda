@@ -10,7 +10,6 @@ import {
     BookOpenText,
     Download,
     Facebook,
-    FileSymlink,
     Instagram,
     RefreshCw,
     X,
@@ -47,11 +46,6 @@ export function App(): JSX.Element {
     const [connectionState, setConnectionState] = useState<ConnectionState>(
         () => (sheetUrl ? 'loading' : 'ready')
     );
-    const [connectionMessage, setConnectionMessage] = useState(() =>
-        sheetUrl
-            ? 'Connecting to Google Sheets...'
-            : 'No Google Sheet connected.'
-    );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isMarkDialogOpen, setIsMarkDialogOpen] = useState(false);
@@ -65,11 +59,6 @@ export function App(): JSX.Element {
         cards[0] ??
         sampleCards[0];
     const previewSvg = renderVocabCard(selectedCard);
-    const sheetStatusState =
-        connectionState === 'ready' && !sheetUrl
-            ? 'disconnected'
-            : connectionState;
-
     useEffect(() => {
         if (sheetUrl) {
             void connectToSheet(sheetUrl);
@@ -92,13 +81,11 @@ export function App(): JSX.Element {
             setDraftSheetUrl('');
             window.localStorage.removeItem(sheetStorageKey);
             setConnectionState('ready');
-            setConnectionMessage('No Google Sheet connected.');
             setIsDialogOpen(false);
             return;
         }
 
         setConnectionState('loading');
-        setConnectionMessage('Connecting to Google Sheets...');
 
         try {
             const nextCards = await fetchSheetCards(normalizedSheetUrl);
@@ -110,16 +97,10 @@ export function App(): JSX.Element {
             window.localStorage.setItem(webhookStorageKey, draftWebhookUrl);
             setWebhookUrl(draftWebhookUrl);
             setConnectionState('ready');
-            const unusedCount = nextCards.filter(
-                (card) => !card.usedAt?.trim()
-            ).length;
-            setConnectionMessage(
-                `Google Sheet connected: ${unusedCount} unused phrases`
-            );
             setIsDialogOpen(false);
         } catch (error) {
             setConnectionState('error');
-            setConnectionMessage(
+            setUsedMessage(
                 error instanceof Error
                     ? error.message
                     : 'Could not connect to the Sheet.'
@@ -259,15 +240,6 @@ export function App(): JSX.Element {
                           }
                         : card
                 )
-            );
-            const nextUnusedCount = cards.filter(
-                (card) =>
-                    card.rowNumber !== cardToMark.rowNumber &&
-                    !card.usedAt?.trim()
-            ).length;
-
-            setConnectionMessage(
-                `Google Sheet connected: ${nextUnusedCount} unused phrases`
             );
             setIsMarkDialogOpen(false);
             setSelectedIndex(0);
@@ -455,23 +427,6 @@ export function App(): JSX.Element {
                 </section>
             </main>
             <Footer />
-            {sheetUrl ? (
-                <div
-                    className={`sheet-status sheet-status--${sheetStatusState}`}
-                >
-                    <span className='sheet-status-dot' aria-hidden='true' />
-                    <p>{connectionMessage}</p>
-                    <AppButton
-                        ariaLabel='Sheet settings'
-                        className='sheet-settings-button'
-                        icon={<FileSymlink size={18} aria-hidden='true' />}
-                        variant='ghost'
-                        onClick={() => {
-                            setIsDialogOpen(true);
-                        }}
-                    />
-                </div>
-            ) : null}
 
             {isDialogOpen ? (
                 <div className='sheet-dialog-backdrop'>
