@@ -431,6 +431,7 @@ export function App(): JSX.Element {
                         </section>
                     </div>
                 </section>
+                <UsageSection />
             </main>
             <Footer />
 
@@ -519,6 +520,103 @@ export function App(): JSX.Element {
                 </div>
             ) : null}
         </>
+    );
+}
+
+function UsageSection(): JSX.Element {
+    return (
+        <section className='usage-section' aria-labelledby='usage-title'>
+            <div className='usage-section-inner'>
+                <div className='usage-intro'>
+                    <h2 id='usage-title'>Usage</h2>
+                    <p>
+                        Prepare one row per card, connect the Sheet URL, adjust
+                        the preview, then export the card.
+                    </p>
+                </div>
+
+                <div className='usage-guide' aria-label='Usage guide'>
+                    <article className='usage-guide-row'>
+                        <div className='usage-guide-copy'>
+                            <h3>Set up the Sheet</h3>
+                            <p>
+                                Use a public or published Google Sheet with
+                                phrase, meaning, and sentence columns. Add type,
+                                reading, or usedAt when needed.
+                            </p>
+                            <div className='usage-code-list'>
+                                <code>phrase</code>
+                                <code>meaning</code>
+                                <code>sentence</code>
+                                <code>type</code>
+                                <code>reading</code>
+                                <code>usedAt</code>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article className='usage-guide-row'>
+                        <div className='usage-guide-copy'>
+                            <h3>Write readings clearly</h3>
+                            <p>
+                                Put furigana in the reading column, or append it
+                                to the phrase with Japanese or ASCII brackets.
+                            </p>
+                            <div className='usage-code-list'>
+                                <code>散歩（さんぽ）</code>
+                                <code>散歩(さんぽ)</code>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article className='usage-guide-row'>
+                        <div className='usage-guide-copy'>
+                            <h3>Split meaning lists</h3>
+                            <p>
+                                A single meaning stays unnumbered. Multiple
+                                meanings become a numbered list when separated
+                                by new lines, semicolons, or pipes.
+                            </p>
+                            <div className='usage-code-list'>
+                                <code>to walk</code>
+                                <code>to study | to learn</code>
+                                <code>to study; to learn</code>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article className='usage-guide-row'>
+                        <div className='usage-guide-copy'>
+                            <h3>Save and mark used</h3>
+                            <p>
+                                Save edit writes text changes back to the same
+                                Sheet row. After downloading a PNG, Mark as used
+                                writes usedAt and removes the row from the
+                                unused list.
+                            </p>
+                        </div>
+                    </article>
+                </div>
+
+                <div className='usage-reference' aria-label='Format reference'>
+                    <section>
+                        <h3>Accepted aliases</h3>
+                        <p>
+                            phrase also accepts word, vocab, term, 語彙, or 詞.
+                            sentence also accepts example, examples, 例句, or
+                            例文.
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Writeback setup</h3>
+                        <p>
+                            The deployed Apps Script is already configured. The
+                            script owner still needs edit access to the Sheet.
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </section>
     );
 }
 
