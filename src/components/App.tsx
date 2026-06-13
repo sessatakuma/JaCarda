@@ -10,9 +10,9 @@ import {
     BookOpenText,
     Download,
     Facebook,
+    FileSymlink,
     Instagram,
     RefreshCw,
-    Settings,
     X,
 } from 'lucide-react';
 
@@ -456,12 +456,16 @@ export function App(): JSX.Element {
             </main>
             <Footer />
             <div className={`sheet-status sheet-status--${sheetStatusState}`}>
-                <span className='sheet-status-dot' aria-hidden='true' />
-                <p>{connectionMessage}</p>
+                {sheetStatusState === 'disconnected' ? null : (
+                    <>
+                        <span className='sheet-status-dot' aria-hidden='true' />
+                        <p>{connectionMessage}</p>
+                    </>
+                )}
                 <AppButton
                     ariaLabel='Sheet settings'
                     className='sheet-settings-button'
-                    icon={<Settings size={18} aria-hidden='true' />}
+                    icon={<FileSymlink size={18} aria-hidden='true' />}
                     variant='ghost'
                     onClick={() => {
                         setIsDialogOpen(true);

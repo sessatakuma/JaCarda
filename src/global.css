@@ -208,7 +208,10 @@ button:disabled {
     grid-template-columns: var(--space-3) minmax(0, 1fr) auto;
     gap: var(--space-3);
     align-items: center;
-    width: min(calc(100vw - (var(--space-6) * 2)), 360px);
+    width: min(
+        calc(100vw - (var(--space-6) * 2)),
+        var(--size-sheet-status-max)
+    );
     padding: var(--space-3);
     color: var(--color-text-secondary);
     background: var(--color-accent-green-light);
@@ -230,7 +233,7 @@ button:disabled {
 }
 
 .sheet-status--loading .sheet-status-dot {
-    background: #e3a23b;
+    background: var(--clr-warning);
 }
 
 .sheet-status--error .sheet-status-dot {
@@ -238,12 +241,9 @@ button:disabled {
 }
 
 .sheet-status--disconnected {
-    color: var(--clr-error);
-    background: color-mix(in srgb, var(--clr-error) 12%, white);
-}
-
-.sheet-status--disconnected .sheet-status-dot {
-    background: var(--clr-error);
+    grid-template-columns: auto;
+    width: auto;
+    padding: var(--space-2);
 }
 
 .panel-title {
