@@ -1,6 +1,8 @@
 :root {
-    --ff-body: 'IBM Plex Sans', 'Avenir Next', 'Segoe UI', sans-serif;
-    --ff-display: 'Iowan Old Style', 'Palatino Linotype', serif;
+    --ff-body:
+        'Nunito Sans', 'Avenir Next Rounded', 'IBM Plex Sans', sans-serif;
+    --ff-display:
+        'Nunito Sans', 'Avenir Next Rounded', 'IBM Plex Sans', sans-serif;
 
     --fs-label: 0.75rem;
     --fs-body: 1rem;
@@ -30,13 +32,25 @@
 
     --size-border-1: 1px;
     --size-outline: 2px;
+    --size-screen-min: 320px;
     --size-content-max: 720px;
+    --size-page-max: 1440px;
+    --size-panel-min: 280px;
+    --size-panel-max: 360px;
     --size-preview-max: 420px;
     --size-control-min: 44px;
+    --size-row-list-max: 360px;
+    --size-glow-lg: 512px;
+    --size-glow-md: 448px;
+    --bp-tablet: 1180px;
+    --bp-phone: 760px;
+    --measure-title: 13ch;
     --measure-copy: 36ch;
 
     --radius-12: 12px;
     --radius-16: 16px;
     --radius-24: 24px;
     --radius-32: 32px;
+
+    --duration-fast: 160ms;
 }

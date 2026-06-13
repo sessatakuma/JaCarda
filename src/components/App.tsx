@@ -123,15 +123,29 @@ export function App(): JSX.Element {
     return (
         <main className='app'>
             <section className='hero'>
-                <p className='hero__eyebrow'>JaCarda Studio</p>
+                <div className='hero__brand'>
+                    <p className='hero__eyebrow'>JaCarda Studio</p>
+                    <div className='palette-strip' aria-label='Active palette'>
+                        <span className='palette-strip__swatch palette-strip__swatch--ink' />
+                        <span className='palette-strip__swatch palette-strip__swatch--slate' />
+                        <span className='palette-strip__swatch palette-strip__swatch--mint' />
+                        <span className='palette-strip__swatch palette-strip__swatch--soft' />
+                        <span className='palette-strip__swatch palette-strip__swatch--guide' />
+                    </div>
+                </div>
                 <div className='hero__copy'>
                     <h1 className='hero__title'>
-                        Google Sheet to grid-perfect vocabulary cards.
+                        Make sheet-powered cards feel coolorful.
                     </h1>
                     <p className='hero__description'>
                         Connect a public Sheet, edit a row ad hoc, preview the
                         Affinity-aligned SVG, then download the current card.
                     </p>
+                    <div className='hero__chips' aria-label='Studio features'>
+                        <span>Sheet sync</span>
+                        <span>Live preview</span>
+                        <span>SVG export</span>
+                    </div>
                 </div>
             </section>
 
