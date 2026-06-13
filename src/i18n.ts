@@ -27,7 +27,10 @@ const resources = {
             },
             edit: {
                 meaning: 'Meaning',
+                meaningPlaceholder:
+                    '- Orange juice, fruit, and sago dessert\n- Artist Orange Sago’s nickname (not really)',
                 phraseReading: 'Phrase + Furigana',
+                phraseReadingPlaceholder: '柳橙さご（オレンジさご）',
                 sentence: 'Sentence',
                 title: 'Edit',
                 type: 'Type',
@@ -75,12 +78,6 @@ const resources = {
             usage: {
                 aria: 'Usage guide',
                 intro: 'Connect the Sheet URL, adjust the content, then export the card.',
-                meaningBody:
-                    'Separate meanings with one item per line, like <code>1. to study</code>, <code>2. to learn</code>, or <code>- to review</code>.',
-                meaningTitle: 'Split meaning lists',
-                readingBody:
-                    'When writing reading inline, use one bracketed format: <code>散歩（さんぽ）</code>.',
-                readingTitle: 'Write readings clearly',
                 saveBody:
                     'Save edit syncs changes back to Google Sheets. After downloading a PNG, Mark as used writes usedAt, so the row no longer appears in the list.',
                 saveTitle: 'Save and mark used',
@@ -115,7 +112,10 @@ const resources = {
             },
             edit: {
                 meaning: '意思',
+                meaningPlaceholder:
+                    '- 以柳橙汁、果肉和西米製成的甜品\n- 繪師柳橙西米露的暱稱(並不是)',
                 phraseReading: '詞句 + 假名',
+                phraseReadingPlaceholder: '柳橙さご（オレンジさご）',
                 sentence: '例句',
                 title: '編輯',
                 type: '類型',
@@ -163,12 +163,6 @@ const resources = {
             usage: {
                 aria: '使用方式說明',
                 intro: '連接試算表網址，調整內容後匯出卡片。',
-                meaningBody:
-                    '多個意思請一行一個，格式類似 <code>1. to study</code>、<code>2. to learn</code> 或 <code>- to review</code>。',
-                meaningTitle: '分隔多個意思',
-                readingBody:
-                    '在詞句後方填寫讀音時，使用單一括號格式：<code>散歩（さんぽ）</code>。',
-                readingTitle: '清楚填寫讀音',
                 saveBody:
                     '儲存編輯會把變更同步回 Google 試算表。下載 PNG 後，標記為已使用會寫入 usedAt，之後便不會再出現在清單中。',
                 saveTitle: '儲存並標記已使用',

@@ -362,6 +362,9 @@ export function App(): JSX.Element {
                             <label className='edit-field'>
                                 <span>{t('edit.phraseReading')}</span>
                                 <input
+                                    placeholder={t(
+                                        'edit.phraseReadingPlaceholder'
+                                    )}
                                     value={formatPhraseWithReading(
                                         selectedCard
                                     )}
@@ -375,6 +378,7 @@ export function App(): JSX.Element {
                             <label className='edit-field'>
                                 <span>{t('edit.meaning')}</span>
                                 <textarea
+                                    placeholder={t('edit.meaningPlaceholder')}
                                     rows={4}
                                     value={selectedCard.meaning}
                                     onChange={(event) => {
@@ -543,30 +547,6 @@ function UsageSection(): JSX.Element {
                             <p>
                                 <Trans
                                     i18nKey='usage.sheetBody'
-                                    components={{ code: <code /> }}
-                                />
-                            </p>
-                        </div>
-                    </article>
-
-                    <article className='usage-guide-row'>
-                        <div className='usage-guide-copy'>
-                            <h3>{t('usage.readingTitle')}</h3>
-                            <p>
-                                <Trans
-                                    i18nKey='usage.readingBody'
-                                    components={{ code: <code /> }}
-                                />
-                            </p>
-                        </div>
-                    </article>
-
-                    <article className='usage-guide-row'>
-                        <div className='usage-guide-copy'>
-                            <h3>{t('usage.meaningTitle')}</h3>
-                            <p>
-                                <Trans
-                                    i18nKey='usage.meaningBody'
                                     components={{ code: <code /> }}
                                 />
                             </p>
