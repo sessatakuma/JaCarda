@@ -14,15 +14,17 @@ bun install
 bun run dev
 ```
 
-The web app can connect to a public/exportable Google Sheet, show the connected
-CSV export URL, preview generated cards, let you edit the selected row locally,
-and download the current card as SVG.
+The web app can connect to a public/exportable Google Sheet, preview generated
+cards, save edits back to the selected Sheet row, and download the current card
+as PNG.
 
-To write generated/used dates back to the Sheet, deploy
+To write edits and generated/used dates back to the Sheet, deploy
 `scripts/google-sheet-used-webhook.gs` as a Google Apps Script web app bound to
 the spreadsheet, then paste the web app URL into **Connect Google Sheet**. The
-app posts the selected Sheet row number and ISO timestamp; rows with a `usedAt`,
-`used date`, or `used up date` value are hidden from the unused list.
+app posts the selected Sheet row number, edited `type`, `phrase`, `meaning`, and
+`sentence` fields, plus an ISO timestamp when a downloaded card is marked used.
+Rows with a `usedAt`, `used date`, or `used up date` value are hidden from the
+unused list.
 
 ## Check
 

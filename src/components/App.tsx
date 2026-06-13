@@ -39,6 +39,9 @@ export function App(): JSX.Element {
         'Connecting to the default Sheet...'
     );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [isMarkDialogOpen, setIsMarkDialogOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [usedMessage, setUsedMessage] = useState('');
 
     const unusedCards = cards.filter((card) => !card.usedAt?.trim());
@@ -117,40 +120,73 @@ export function App(): JSX.Element {
         updateSelectedCard(field, nextValue);
     }
 
-    async function confirmGeneratedAndMarkUsed(): Promise<void> {
-        const usedAt = new Date().toISOString();
-
+    async function writeSheetRow(
+        payload: Partial<VocabCard> & { rowNumber: number }
+    ): Promise<void> {
         if (!webhookUrl.trim()) {
-            setUsedMessage(
-                'Add an Apps Script webhook in Connect Google Sheet before writing used dates.'
+            throw new Error(
+                'Add an Apps Script webhook in Connect Google Sheet before saving.'
             );
-            return;
         }
 
-        setUsedMessage('Writing used date back to Google Sheets...');
+        const response = await fetch(webhookUrl.trim(), {
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            method: 'POST',
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                `Webhook returned ${response.status} ${response.statusText}`
+            );
+        }
+    }
+
+    async function saveEditedCard(): Promise<void> {
+        setIsSaving(true);
+        setUsedMessage(`Saving "${selectedCard.phrase}" to Google Sheets...`);
 
         try {
-            const response = await fetch(webhookUrl.trim(), {
-                body: JSON.stringify({
-                    phrase: selectedCard.phrase,
-                    rowNumber: selectedCard.rowNumber,
-                    usedAt,
-                }),
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                method: 'POST',
+            await writeSheetRow({
+                meaning: selectedCard.meaning,
+                phrase: selectedCard.phrase,
+                rowNumber: selectedCard.rowNumber,
+                sentence: selectedCard.sentence,
+                type: selectedCard.type,
             });
+            setUsedMessage(`Saved "${selectedCard.phrase}".`);
+        } catch (error) {
+            setUsedMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not save edits back to Google Sheets.'
+            );
+        } finally {
+            setIsSaving(false);
+        }
+    }
 
-            if (!response.ok) {
-                throw new Error(
-                    `Webhook returned ${response.status} ${response.statusText}`
-                );
-            }
+    async function markSelectedCardAsUsed(): Promise<void> {
+        const cardToMark = selectedCard;
+        const usedAt = new Date().toISOString();
 
+        setIsSaving(true);
+        setUsedMessage(`Marking "${cardToMark.phrase}" as used...`);
+
+        try {
+            await writeSheetRow({
+                meaning: cardToMark.meaning,
+                phrase: cardToMark.phrase,
+                rowNumber: cardToMark.rowNumber,
+                sentence: cardToMark.sentence,
+                type: cardToMark.type,
+                usedAt,
+            });
             setCards((currentCards) =>
                 currentCards.map((card) =>
-                    card.rowNumber === selectedCard.rowNumber
+                    card.rowNumber === cardToMark.rowNumber
                         ? {
                               ...card,
                               usedAt,
@@ -158,32 +194,44 @@ export function App(): JSX.Element {
                         : card
                 )
             );
+            setIsMarkDialogOpen(false);
             setSelectedIndex(0);
-            setUsedMessage(`Marked row ${selectedCard.rowNumber} as used.`);
+            setUsedMessage(`Marked "${cardToMark.phrase}" as used.`);
         } catch (error) {
             setUsedMessage(
                 error instanceof Error
                     ? error.message
                     : 'Could not write used date back to Google Sheets.'
             );
+        } finally {
+            setIsSaving(false);
         }
     }
 
-    function downloadCurrent(): void {
+    async function downloadCurrentPng(): Promise<void> {
         const filename = `${String(selectedIndex + 1).padStart(3, '0')}-${slugify(
             selectedCard.phrase,
             'card'
-        )}.svg`;
-        const blob = new Blob([previewSvg], {
-            type: 'image/svg+xml;charset=utf-8',
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        )}.png`;
 
-        link.href = url;
-        link.download = filename;
-        link.click();
-        URL.revokeObjectURL(url);
+        setIsDownloading(true);
+        setUsedMessage('');
+
+        try {
+            const blob = await svgToPngBlob(previewSvg);
+            await savePngBlob(blob, filename);
+            setIsMarkDialogOpen(true);
+        } catch (error) {
+            setUsedMessage(
+                error instanceof DOMException && error.name === 'AbortError'
+                    ? 'PNG download canceled.'
+                    : error instanceof Error
+                      ? error.message
+                      : 'Could not download PNG.'
+            );
+        } finally {
+            setIsDownloading(false);
+        }
     }
 
     return (
@@ -242,7 +290,6 @@ export function App(): JSX.Element {
                         <section className='edit-panel' aria-label='Text edit'>
                             <div className='edit-panel-header'>
                                 <p className='studio-eyebrow'>Text edit</p>
-                                <p>Sheet row {selectedCard.rowNumber}</p>
                             </div>
                             <label className='edit-field'>
                                 <span>Type / reading</span>
@@ -295,13 +342,14 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <button
-                                className='button button--ghost'
+                                className='button button--primary'
                                 type='button'
+                                disabled={isSaving}
                                 onClick={() => {
-                                    void confirmGeneratedAndMarkUsed();
+                                    void saveEditedCard();
                                 }}
                             >
-                                Confirm generated & mark used
+                                {isSaving ? 'Saving...' : 'Save edits'}
                             </button>
                             {usedMessage ? (
                                 <p className='used-message'>{usedMessage}</p>
@@ -320,10 +368,15 @@ export function App(): JSX.Element {
                             <button
                                 className='button button--primary preview-download'
                                 type='button'
-                                onClick={downloadCurrent}
+                                disabled={isDownloading}
+                                onClick={() => {
+                                    void downloadCurrentPng();
+                                }}
                             >
                                 <Download size={20} aria-hidden='true' />
-                                Download SVG
+                                {isDownloading
+                                    ? 'Downloading...'
+                                    : 'Download PNG'}
                             </button>
                         </section>
                     </div>
@@ -389,9 +442,151 @@ export function App(): JSX.Element {
                     </dialog>
                 </div>
             ) : null}
+            {isMarkDialogOpen ? (
+                <div className='sheet-dialog-backdrop'>
+                    <dialog className='sheet-dialog' open>
+                        <div className='sheet-dialog-content'>
+                            <h2>PNG downloaded</h2>
+                            <p>
+                                Confirm this card was generated before marking
+                                it used in Google Sheets.
+                            </p>
+                            <div className='sheet-dialog-actions'>
+                                <button
+                                    className='button button--ghost'
+                                    type='button'
+                                    onClick={() => {
+                                        setIsMarkDialogOpen(false);
+                                    }}
+                                >
+                                    Not yet
+                                </button>
+                                <button
+                                    className='button button--primary'
+                                    type='button'
+                                    disabled={isSaving}
+                                    onClick={() => {
+                                        void markSelectedCardAsUsed();
+                                    }}
+                                >
+                                    Mark "{selectedCard.phrase}" as used
+                                </button>
+                            </div>
+                        </div>
+                    </dialog>
+                </div>
+            ) : null}
         </>
     );
 }
+
+async function svgToPngBlob(svg: string): Promise<Blob> {
+    const image = new Image();
+    const svgBlob = new Blob([svg], {
+        type: 'image/svg+xml;charset=utf-8',
+    });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    try {
+        await new Promise<void>((resolve, reject) => {
+            image.addEventListener('load', () => {
+                resolve();
+            });
+            image.addEventListener('error', () => {
+                reject(new Error('Could not render SVG for PNG export.'));
+            });
+            image.src = svgUrl;
+        });
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = 1080;
+        canvas.height = 1350;
+
+        if (!context) {
+            throw new Error('Canvas is unavailable for PNG export.');
+        }
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        return await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    resolve(blob);
+                    return;
+                }
+
+                reject(new Error('Could not encode PNG download.'));
+            }, 'image/png');
+        });
+    } finally {
+        URL.revokeObjectURL(svgUrl);
+    }
+}
+
+async function savePngBlob(blob: Blob, filename: string): Promise<void> {
+    const fileWindow = window as FilePickerWindow;
+
+    if (fileWindow.showSaveFilePicker) {
+        const handle = await fileWindow.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+                {
+                    accept: {
+                        'image/png': ['.png'],
+                    },
+                    description: 'PNG image',
+                },
+            ],
+        });
+        const writable = await handle.createWritable();
+
+        await writable.write(blob);
+        await writable.close();
+        return;
+    }
+
+    triggerDownload(blob, filename);
+    await waitForBrowserDownloadHandoff();
+}
+
+function triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
+}
+
+async function waitForBrowserDownloadHandoff(): Promise<void> {
+    await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 600);
+    });
+}
+
+type FilePickerWindow = Window & {
+    showSaveFilePicker?: (options: {
+        suggestedName: string;
+        types: Array<{
+            accept: Record<string, Array<string>>;
+            description: string;
+        }>;
+    }) => Promise<FileSystemFileHandle>;
+};
+
+type FileSystemFileHandle = {
+    createWritable: () => Promise<FileSystemWritableFileStream>;
+};
+
+type FileSystemWritableFileStream = {
+    close: () => Promise<void>;
+    write: (data: Blob) => Promise<void>;
+};
 
 function Nav(): JSX.Element {
     return (
