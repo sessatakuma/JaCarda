@@ -2,14 +2,15 @@
 export type VocabCard = {
     meaning: string;
     phrase: string;
+    reading: string;
     rowNumber: number;
     sentence: string;
     type: string;
     usedAt?: string;
 };
 
-export const sampleCsv = `type,phrase,meaning,sentence
-夏日甜品,柳橙さご,"以柳橙汁、果肉和西米製成的甜品|繪師柳橙西米露的暱稱(並不是)",今天は暑すぎるので、柳橙さごを買って涼もう。`;
+export const sampleCsv = `type,phrase,reading,meaning,sentence
+夏日甜品,柳橙さご,オレンジさご,"以柳橙汁、果肉和西米製成的甜品|繪師柳橙西米露的暱稱(並不是)",今日は暑すぎるので、柳橙さごを買って涼もう。`;
 
 const card = {
     height: 1350,
@@ -98,12 +99,21 @@ const columnAliases = {
         '意思',
     ],
     phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
+    reading: [
+        'reading',
+        'kana',
+        'furigana',
+        'ruby',
+        'よみ',
+        '読み',
+        'ふりがな',
+    ],
     sentence: ['sentence', 'example', 'examples', '例句', '例文'],
-    type: ['type', 'category', 'reading', '分類', '類型'],
+    type: ['type', 'category', '分類', '類型'],
     usedAt: ['usedAt', 'used_at', 'used date', 'used up date', 'generatedAt'],
 } satisfies Record<CsvField, Array<string>>;
 
-const requiredColumns = ['type', 'phrase', 'meaning', 'sentence'] as const;
+const requiredColumns = ['phrase', 'meaning', 'sentence'] as const;
 
 type MeaningLine = {
     prefix: string;
@@ -131,14 +141,28 @@ export function parseCsvCards(content: string): Array<VocabCard> {
         throw new Error(`Missing required column(s): ${missing.join(', ')}`);
     }
 
-    return rows.slice(headerIndex + 1).map((row, index) => ({
-        meaning: getCell(row, columns.meaning),
-        phrase: getCell(row, columns.phrase),
-        rowNumber: headerIndex + index + 2,
-        sentence: getCell(row, columns.sentence),
-        type: getCell(row, columns.type),
-        usedAt: getCell(row, columns.usedAt) || undefined,
-    }));
+    return rows.slice(headerIndex + 1).map((row, index) => {
+        const rawPhrase = getCell(row, columns.phrase);
+        const split = splitPhraseReading(rawPhrase);
+        const rawType = getCell(row, columns.type);
+        const reading =
+            getCell(row, columns.reading) ||
+            split.reading ||
+            (looksLikeReading(rawType) ? rawType : '');
+
+        return {
+            meaning: getCell(row, columns.meaning),
+            phrase: split.phrase,
+            reading,
+            rowNumber: headerIndex + index + 2,
+            sentence: getCell(row, columns.sentence),
+            type:
+                looksLikeReading(rawType) && !getCell(row, columns.reading)
+                    ? ''
+                    : rawType,
+            usedAt: getCell(row, columns.usedAt) || undefined,
+        };
+    });
 }
 
 function findHeaderRowIndex(rows: Array<Array<string>>): number {
@@ -272,7 +296,7 @@ text[data-field] {
 }
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
-<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="type" text-anchor="middle">${escapeXml(cardData.type)}</text>
+<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="reading" text-anchor="middle">${escapeXml(cardData.reading)}</text>
 <rect x="${phraseRuleBox.x}" y="${rowLineY(layout.phraseRule.row)}" width="${phraseRuleBox.width}" height="${rowHeight}" rx="16" fill="${style.accentSoft}"/>
 <text x="${centerX}" y="${rowLineY(layout.phrase.row) + scale.display * 0.8}" class="phrase" data-field="phrase" text-anchor="middle">${escapeXml(cardData.phrase)}</text>
 ${lineNodes(plan.meaning, {
@@ -494,6 +518,36 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         meaning,
         sentence,
     };
+}
+
+export function formatPhraseWithReading(cardData: VocabCard): string {
+    return cardData.reading
+        ? `${cardData.phrase}（${cardData.reading}）`
+        : cardData.phrase;
+}
+
+export function splitPhraseReading(value: string): {
+    phrase: string;
+    reading: string;
+} {
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(.*?)\s*[（(]([^()（）]+)[）)]\s*$/);
+
+    if (!match) {
+        return {
+            phrase: trimmed,
+            reading: '',
+        };
+    }
+
+    return {
+        phrase: match[1].trim(),
+        reading: match[2].trim(),
+    };
+}
+
+function looksLikeReading(value: string): boolean {
+    return /^[\u3040-\u30ffー\s]+$/u.test(value.trim());
 }
 
 function choosePlan(cardData: VocabCard) {

@@ -21,10 +21,10 @@ as PNG.
 To write edits and generated/used dates back to the Sheet, deploy
 `scripts/google-sheet-used-webhook.gs` as a Google Apps Script web app bound to
 the spreadsheet, then paste the web app URL into **Connect Google Sheet**. The
-app posts the selected Sheet row number, edited `type`, `phrase`, `meaning`, and
-`sentence` fields, plus an ISO timestamp when a downloaded card is marked used.
-Rows with a `usedAt`, `used date`, or `used up date` value are hidden from the
-unused list.
+app posts the selected Sheet row number, edited `type`, `phrase`, `reading`,
+`meaning`, and `sentence` fields, plus an ISO timestamp when a downloaded card
+is marked used. Rows with a `usedAt`, `used date`, or `used up date` value are
+hidden from the unused list.
 
 ## Check
 
@@ -40,9 +40,10 @@ This project includes `bunfig.toml` with `minimumReleaseAge = 604800`.
 bun run cards examples/vocab-cards.csv dist/cards
 ```
 
-The card generator reads CSV rows with `type`, `phrase`, `meaning`, and
-`sentence` columns. The input can be a local CSV file, a direct CSV URL, or a
-public/exportable Google Sheet URL:
+The card generator reads CSV rows with `phrase`, `meaning`, and `sentence`
+columns. Optional `type` and `reading` columns are supported; in the web editor,
+the phrase field can also include reading as `散歩（さんぽ）`. The input can be a
+local CSV file, a direct CSV URL, or a public/exportable Google Sheet URL:
 
 ```bash
 bun run cards "https://docs.google.com/spreadsheets/d/<sheet-id>/edit#gid=0" dist/cards

@@ -77,7 +77,7 @@ const TYPE_SCALES = [
     { body: 36, display: 112, heading: 60, name: 'dense' },
 ];
 
-const REQUIRED_COLUMNS = ['type', 'phrase', 'meaning', 'sentence'];
+const REQUIRED_COLUMNS = ['phrase', 'meaning', 'sentence'];
 
 const COLUMN_ALIASES = {
     meaning: [
@@ -89,8 +89,17 @@ const COLUMN_ALIASES = {
         '意思',
     ],
     phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
+    reading: [
+        'reading',
+        'kana',
+        'furigana',
+        'ruby',
+        'よみ',
+        '読み',
+        'ふりがな',
+    ],
     sentence: ['sentence', 'example', 'examples', '例句', '例文'],
-    type: ['type', 'category', 'reading', '分類', '類型'],
+    type: ['type', 'category', '分類', '類型'],
     usedAt: ['usedAt', 'used_at', 'used date', 'used up date', 'generatedAt'],
 };
 
@@ -99,9 +108,11 @@ function usage() {
         'Usage: bun run cards <input.csv|google-sheet-url> [output-dir]',
         '',
         'CSV columns:',
-        '  type, phrase, meaning, sentence',
+        '  phrase, meaning, sentence',
         '',
         'Notes:',
+        '  - Optional type and reading columns are supported.',
+        '  - Phrase can include reading as 散歩（さんぽ）; output renders it separately.',
         '  - Google Sheets must be public, published, or otherwise exportable without login.',
         '  - 例句 and ©2026 Sessatakuma are fixed template text.',
         '  - Separate multiple meanings with newlines, semicolons, or pipes.',
@@ -275,14 +286,28 @@ function recordsFromCsv(rows) {
 
     return rows
         .slice(headerIndex + 1)
-        .map((row, index) => ({
-            meaning: getCell(row, columns.meaning),
-            phrase: getCell(row, columns.phrase),
-            sentence: getCell(row, columns.sentence),
-            type: getCell(row, columns.type),
-            usedAt: getCell(row, columns.usedAt),
-            rowNumber: headerIndex + index + 2,
-        }))
+        .map((row, index) => {
+            const rawPhrase = getCell(row, columns.phrase);
+            const split = splitPhraseReading(rawPhrase);
+            const rawType = getCell(row, columns.type);
+            const reading =
+                getCell(row, columns.reading) ||
+                split.reading ||
+                (looksLikeReading(rawType) ? rawType : '');
+
+            return {
+                meaning: getCell(row, columns.meaning),
+                phrase: split.phrase,
+                reading,
+                sentence: getCell(row, columns.sentence),
+                type:
+                    looksLikeReading(rawType) && !getCell(row, columns.reading)
+                        ? ''
+                        : rawType,
+                usedAt: getCell(row, columns.usedAt),
+                rowNumber: headerIndex + index + 2,
+            };
+        })
         .filter((record) => !record.usedAt);
 }
 
@@ -304,6 +329,27 @@ function findHeaderRowIndex(rows) {
 
 function getCell(row, index) {
     return index >= 0 ? (row[index] ?? '').trim() : '';
+}
+
+function splitPhraseReading(value) {
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(.*?)\s*[（(]([^()（）]+)[）)]\s*$/);
+
+    if (!match) {
+        return {
+            phrase: trimmed,
+            reading: '',
+        };
+    }
+
+    return {
+        phrase: match[1].trim(),
+        reading: match[2].trim(),
+    };
+}
+
+function looksLikeReading(value) {
+    return /^[\u3040-\u30ffー\s]+$/u.test(value.trim());
 }
 
 function escapeXml(value) {
@@ -536,7 +582,7 @@ text {
 }
 </style>
 <rect width="${CARD.width}" height="${CARD.height}" fill="${STYLE.background}"/>
-<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.type)}</text>
+<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.reading)}</text>
 <rect x="${underlineX}" y="${rowLineY(LAYOUT.phraseRule.row)}" width="${underlineWidth}" height="${ROW_HEIGHT}" rx="16" fill="${STYLE.accentSoft}"/>
 <text x="${centerX}" y="${rowLineY(LAYOUT.phrase.row) + scale.display * 0.8}" class="phrase" text-anchor="middle">${escapeXml(card.phrase)}</text>
 ${lineNodes(plan.meaning, {

@@ -1,19 +1,28 @@
 /* eslint-disable */
-import { useEffect, useState, type JSX, type MouseEvent } from 'react';
+import {
+    useEffect,
+    useState,
+    type JSX,
+    type MouseEvent,
+    type ReactNode,
+} from 'react';
 import {
     BookOpenText,
     Download,
     Facebook,
     Instagram,
     RefreshCw,
+    Settings,
 } from 'lucide-react';
 
 import {
     fetchSheetCards,
+    formatPhraseWithReading,
     parseCsvCards,
     renderVocabCard,
     sampleCsv,
     slugify,
+    splitPhraseReading,
     type VocabCard,
 } from '../lib/vocabCards.js';
 
@@ -72,7 +81,9 @@ export function App(): JSX.Element {
             const unusedCount = nextCards.filter(
                 (card) => !card.usedAt?.trim()
             ).length;
-            setConnectionMessage(`${unusedCount} unused rows`);
+            setConnectionMessage(
+                `Google Sheet connected: ${unusedCount} unused phrases`
+            );
             setIsDialogOpen(false);
         } catch (error) {
             setConnectionState('error');
@@ -117,7 +128,28 @@ export function App(): JSX.Element {
             return;
         }
 
+        if (field === 'phrase') {
+            updatePhraseWithReading(nextValue);
+            return;
+        }
+
         updateSelectedCard(field, nextValue);
+    }
+
+    function updatePhraseWithReading(value: string): void {
+        const split = splitPhraseReading(value);
+
+        setCards((currentCards) =>
+            currentCards.map((card) =>
+                card.rowNumber === selectedCard.rowNumber
+                    ? {
+                          ...card,
+                          phrase: split.phrase,
+                          reading: split.reading,
+                      }
+                    : card
+            )
+        );
     }
 
     async function writeSheetRow(
@@ -152,6 +184,7 @@ export function App(): JSX.Element {
             await writeSheetRow({
                 meaning: selectedCard.meaning,
                 phrase: selectedCard.phrase,
+                reading: selectedCard.reading,
                 rowNumber: selectedCard.rowNumber,
                 sentence: selectedCard.sentence,
                 type: selectedCard.type,
@@ -179,6 +212,7 @@ export function App(): JSX.Element {
             await writeSheetRow({
                 meaning: cardToMark.meaning,
                 phrase: cardToMark.phrase,
+                reading: cardToMark.reading,
                 rowNumber: cardToMark.rowNumber,
                 sentence: cardToMark.sentence,
                 type: cardToMark.type,
@@ -200,7 +234,9 @@ export function App(): JSX.Element {
                     !card.usedAt?.trim()
             ).length;
 
-            setConnectionMessage(`${nextUnusedCount} unused rows`);
+            setConnectionMessage(
+                `Google Sheet connected: ${nextUnusedCount} unused phrases`
+            );
             setIsMarkDialogOpen(false);
             setSelectedIndex(0);
             setUsedMessage(`Marked "${cardToMark.phrase}" as used.`);
@@ -256,18 +292,17 @@ export function App(): JSX.Element {
                                     aria-hidden='true'
                                 />
                                 <p>{connectionMessage}</p>
+                                <AppButton
+                                    ariaLabel='Sheet settings'
+                                    className='sheet-settings-button'
+                                    icon={<Settings size={18} />}
+                                    variant='ghost'
+                                    onClick={() => {
+                                        setIsDialogOpen(true);
+                                    }}
+                                />
                             </div>
-                            <button
-                                className='button button--ghost'
-                                type='button'
-                                onClick={() => {
-                                    setIsDialogOpen(true);
-                                }}
-                            >
-                                {connectionState === 'loading'
-                                    ? 'Connecting...'
-                                    : 'Connect Google Sheet'}
-                            </button>
+                            <PanelTitle>Sheet</PanelTitle>
                             <div className='row-list'>
                                 {unusedCards.map((card, index) => (
                                     <button
@@ -288,18 +323,20 @@ export function App(): JSX.Element {
                                         <strong>
                                             {card.phrase || 'Untitled card'}
                                         </strong>
-                                        <small>{card.type || 'No type'}</small>
+                                        <small>
+                                            {card.reading ||
+                                                card.type ||
+                                                'No reading'}
+                                        </small>
                                     </button>
                                 ))}
                             </div>
                         </aside>
 
                         <section className='edit-panel' aria-label='Text edit'>
-                            <div className='edit-panel-header'>
-                                <p className='studio-eyebrow'>Text edit</p>
-                            </div>
+                            <PanelTitle>Edit</PanelTitle>
                             <label className='edit-field'>
-                                <span>Type / reading</span>
+                                <span>Type</span>
                                 <input
                                     value={selectedCard.type}
                                     onChange={(event) => {
@@ -311,12 +348,13 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <label className='edit-field'>
-                                <span>Phrase</span>
+                                <span>Phrase / reading</span>
                                 <input
-                                    value={selectedCard.phrase}
+                                    value={formatPhraseWithReading(
+                                        selectedCard
+                                    )}
                                     onChange={(event) => {
-                                        updateSelectedCard(
-                                            'phrase',
+                                        updatePhraseWithReading(
                                             event.target.value
                                         );
                                     }}
@@ -348,16 +386,14 @@ export function App(): JSX.Element {
                                     }}
                                 />
                             </label>
-                            <button
-                                className='button button--primary'
-                                type='button'
+                            <AppButton
                                 disabled={isSaving}
                                 onClick={() => {
                                     void saveEditedCard();
                                 }}
                             >
                                 {isSaving ? 'Saving...' : 'Save edits'}
-                            </button>
+                            </AppButton>
                             {usedMessage ? (
                                 <p className='used-message'>{usedMessage}</p>
                             ) : null}
@@ -367,15 +403,16 @@ export function App(): JSX.Element {
                             className='preview-panel'
                             aria-label='Editable SVG preview'
                         >
+                            <PanelTitle>Preview</PanelTitle>
                             <div
                                 className='svg-preview'
                                 dangerouslySetInnerHTML={{ __html: previewSvg }}
                                 onDoubleClick={editSvgText}
                             />
-                            <button
-                                className='button button--primary preview-download'
-                                type='button'
+                            <AppButton
+                                className='preview-download'
                                 disabled={isDownloading}
+                                icon={<Download size={20} />}
                                 onClick={() => {
                                     void downloadCurrentPng();
                                 }}
@@ -384,7 +421,7 @@ export function App(): JSX.Element {
                                 {isDownloading
                                     ? 'Downloading...'
                                     : 'Download PNG'}
-                            </button>
+                            </AppButton>
                         </section>
                     </div>
                 </section>
@@ -426,24 +463,22 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <div className='sheet-dialog-actions'>
-                                <button
-                                    className='button button--ghost'
-                                    type='button'
+                                <AppButton
+                                    variant='ghost'
                                     onClick={() => {
                                         setIsDialogOpen(false);
                                         setDraftSheetUrl(sheetUrl);
                                     }}
                                 >
                                     Cancel
-                                </button>
-                                <button
-                                    className='button button--primary'
+                                </AppButton>
+                                <AppButton
                                     type='submit'
                                     disabled={connectionState === 'loading'}
+                                    icon={<RefreshCw size={20} />}
                                 >
-                                    <RefreshCw size={20} aria-hidden='true' />
                                     Connect
-                                </button>
+                                </AppButton>
                             </div>
                         </form>
                     </dialog>
@@ -459,31 +494,69 @@ export function App(): JSX.Element {
                                 it used in Google Sheets.
                             </p>
                             <div className='sheet-dialog-actions'>
-                                <button
-                                    className='button button--ghost'
-                                    type='button'
+                                <AppButton
+                                    variant='ghost'
                                     onClick={() => {
                                         setIsMarkDialogOpen(false);
                                     }}
                                 >
                                     Not yet
-                                </button>
-                                <button
-                                    className='button button--primary'
-                                    type='button'
+                                </AppButton>
+                                <AppButton
                                     disabled={isSaving}
                                     onClick={() => {
                                         void markSelectedCardAsUsed();
                                     }}
                                 >
                                     Mark "{selectedCard.phrase}" as used
-                                </button>
+                                </AppButton>
                             </div>
                         </div>
                     </dialog>
                 </div>
             ) : null}
         </>
+    );
+}
+
+function PanelTitle({ children }: { children: ReactNode }): JSX.Element {
+    return <h2 className='panel-title'>{children}</h2>;
+}
+
+function AppButton({
+    ariaLabel,
+    children,
+    className,
+    disabled,
+    icon,
+    onClick,
+    type = 'button',
+    variant = 'primary',
+}: {
+    ariaLabel?: string;
+    children?: ReactNode;
+    className?: string;
+    disabled?: boolean;
+    icon?: ReactNode;
+    onClick?: () => void;
+    type?: 'button' | 'submit';
+    variant?: 'ghost' | 'primary';
+}): JSX.Element {
+    const classNames = ['button', `button--${variant}`, className]
+        .filter(Boolean)
+        .join(' ');
+
+    return (
+        <button
+            aria-label={ariaLabel}
+            className={classNames}
+            disabled={disabled}
+            type={type}
+            onClick={onClick}
+        >
+            {icon ? <span className='button-icon'>{icon}</span> : null}
+            {children ? <span>{children}</span> : null}
+        </button>
     );
 }
 

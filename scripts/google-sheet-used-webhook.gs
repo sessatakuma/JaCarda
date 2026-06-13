@@ -12,8 +12,17 @@ function doPost(event) {
     const updated = {};
 
     const editableColumns = {
-        type: ['type', 'category', 'reading', '分類', '類型'],
+        type: ['type', 'category', '分類', '類型'],
         phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
+        reading: [
+            'reading',
+            'kana',
+            'furigana',
+            'ruby',
+            'よみ',
+            '読み',
+            'ふりがな',
+        ],
         meaning: [
             'meaning',
             'meanings',
@@ -30,7 +39,15 @@ function doPost(event) {
             return;
         }
 
-        const column = findColumn(headers, editableColumns[field]);
+        const column =
+            field === 'type' || field === 'reading'
+                ? findOrCreateColumn(
+                      sheet,
+                      headerRow,
+                      editableColumns[field],
+                      field
+                  )
+                : findColumn(headers, editableColumns[field]);
         if (column === -1) {
             return;
         }
@@ -102,6 +119,20 @@ function findColumn(headers, aliases) {
     const normalizedAliases = aliases.map(normalizeHeader);
 
     return headers.findIndex((header) => normalizedAliases.includes(header));
+}
+
+function findOrCreateColumn(sheet, headerRow, aliases, fallbackHeader) {
+    const headers = getHeaders(sheet, headerRow);
+    const existingIndex = findColumn(headers, aliases);
+
+    if (existingIndex !== -1) {
+        return existingIndex;
+    }
+
+    const nextColumn = sheet.getLastColumn() + 1;
+    sheet.getRange(headerRow, nextColumn).setValue(fallbackHeader);
+
+    return nextColumn - 1;
 }
 
 function normalizeHeader(value) {
