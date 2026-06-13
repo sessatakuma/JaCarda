@@ -106,7 +106,7 @@ const resources = {
                 downloadedTitle: 'PNG 已下載',
             },
             edit: {
-                meaning: '意思',
+                meaning: '意思(請填寫中文)',
                 meaningPlaceholder:
                     '- 以柳橙汁、果肉和西米製成的甜品\n- 繪師柳橙西米露的暱稱(並不是)',
                 phraseReading: '詞句 + 假名',
