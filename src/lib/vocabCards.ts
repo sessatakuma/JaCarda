@@ -35,40 +35,51 @@ const columnWidth =
 const rowHeight = (gridHeight - (grid.rows - 1) * grid.rowGutter) / grid.rows;
 
 const layout = {
-    exampleBox: {
-        columnEnd: 12,
-        columnStart: 2,
-        rowEnd: 15,
-        rowStart: 13,
+    copyright: {
+        xEnd: 11.5,
+        xStart: 8.5,
+        yEnd: 15.5,
+        yStart: 15.25,
     },
     exampleTitle: {
-        row: 12,
-    },
-    logo: {
-        columnEnd: 12,
-        columnStart: 10,
-        row: 16,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 12,
+        yStart: 10.5,
     },
     meaningBox: {
-        columnEnd: 12,
-        columnStart: 2,
-        rowEnd: 10,
-        rowStart: 8,
+        xEnd: 11,
+        xStart: 0.5,
+        yEnd: 10,
+        yStart: 6.5,
     },
     phrase: {
-        row: 5,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 5.5,
+        yStart: 3,
     },
     phraseRule: {
-        columnEnd: 12,
-        columnStart: 2,
-        row: 6,
+        xEnd: 10.5,
+        xStart: 1,
+        yEnd: 5.5,
+        yStart: 5,
+    },
+    sentenceBox: {
+        xEnd: 11,
+        xStart: 0.5,
+        yEnd: 14.5,
+        yStart: 12.5,
     },
     type: {
-        row: 2,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 2,
+        yStart: 0.5,
     },
 };
 
-const contentWidth = gridBox(2, 12).width;
+const contentWidth = guideBox(layout.meaningBox).width;
 
 const style = {
     accent: '#6da58e',
@@ -84,9 +95,9 @@ const style = {
 };
 
 const typeScales = [
-    { body: 52, display: 160, heading: 84, name: 'default' },
-    { body: 44, display: 136, heading: 72, name: 'compact' },
-    { body: 36, display: 112, heading: 60, name: 'dense' },
+    { body: 24, display: 96, heading: 48, logo: 12, name: 'default' },
+    { body: 22, display: 88, heading: 44, logo: 12, name: 'compact' },
+    { body: 20, display: 80, heading: 40, logo: 12, name: 'dense' },
 ];
 
 type CsvField = Exclude<keyof VocabCard, 'rowNumber'>;
@@ -236,28 +247,16 @@ export function googleSheetCsvUrl(value: string): string | undefined {
 export function renderVocabCard(cardData: VocabCard): string {
     const plan = choosePlan(cardData);
     const { scale } = plan;
-    const centerX = card.width / 2;
-    const meaningBox = gridArea(
-        layout.meaningBox.columnStart,
-        layout.meaningBox.columnEnd,
-        layout.meaningBox.rowStart,
-        layout.meaningBox.rowEnd
-    );
-    const exampleBox = gridArea(
-        layout.exampleBox.columnStart,
-        layout.exampleBox.columnEnd,
-        layout.exampleBox.rowStart,
-        layout.exampleBox.rowEnd
-    );
-    const phraseRuleBox = gridBox(
-        layout.phraseRule.columnStart,
-        layout.phraseRule.columnEnd
-    );
-    const meaningStartY = meaningBox.y + scale.body;
+    const typeBox = guideBox(layout.type);
+    const phraseBox = guideBox(layout.phrase);
+    const phraseRuleBox = guideBox(layout.phraseRule);
+    const meaningBox = guideBox(layout.meaningBox);
+    const exampleTitleBox = guideBox(layout.exampleTitle);
+    const sentenceBox = guideBox(layout.sentenceBox);
+    const copyrightBox = guideBox(layout.copyright);
+    const meaningStartY = meaningBox.y;
     const meaningLineHeight = lineHeight(scale.body);
-    const exampleTitleY =
-        rowCenterY(layout.exampleTitle.row) + scale.heading / 3;
-    const sentenceStartY = exampleBox.y + scale.body;
+    const sentenceStartY = sentenceBox.y;
     const phraseBlock = phraseBlockMetrics(scale);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -315,13 +314,14 @@ text {
 .body {
     font-size: ${scale.body}px;
     fill: ${style.mutedInk};
+    dominant-baseline: hanging;
 }
 .accent {
     fill: ${style.accent};
 }
 .logo {
     font-family: ${style.logoTypeface};
-    font-size: 32px;
+    font-size: ${scale.logo}px;
     fill: ${style.mutedInk};
     font-weight: 700;
     letter-spacing: 0;
@@ -334,13 +334,13 @@ text[data-field] {
 }
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
-<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="type" text-anchor="middle">${escapeXml(cardData.type)}</text>
-<rect x="${phraseRuleBox.x}" y="${rowLineY(layout.phraseRule.row)}" width="${phraseRuleBox.width}" height="${rowHeight}" rx="16" fill="${style.accentSoft}"/>
+<text x="${typeBox.centerX}" y="${typeBox.centerY}" class="type" data-field="type" text-anchor="middle" dominant-baseline="middle">${escapeXml(cardData.type)}</text>
+<rect x="${phraseRuleBox.x}" y="${phraseRuleBox.y}" width="${phraseRuleBox.width}" height="${phraseRuleBox.height}" rx="16" fill="${style.accentSoft}"/>
 ${phraseRubyNode(cardData, {
     height: phraseBlock.height,
-    width: contentWidth,
-    x: gridBox(2, 12).x,
-    y: rowLineY(layout.phrase.row) + phraseBlock.yOffset,
+    width: phraseBox.width,
+    x: phraseBox.x,
+    y: phraseBox.centerY - phraseBlock.height / 2,
 })}
 ${lineNodes(plan.meaning, {
     className: 'body',
@@ -349,15 +349,15 @@ ${lineNodes(plan.meaning, {
     x: meaningBox.x,
     y: meaningStartY,
 })}
-<text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
+<text x="${exampleTitleBox.centerX}" y="${exampleTitleBox.centerY}" class="heading" text-anchor="middle" dominant-baseline="middle">例句</text>
 ${sentenceLineNodes(plan.sentence, cardData.phrase, {
     className: 'body',
     field: 'sentence',
     lineHeight: lineHeight(scale.body),
-    x: exampleBox.x,
+    x: sentenceBox.x,
     y: sentenceStartY,
 })}
-<text x="${card.width - grid.marginRight}" y="${rowLineY(layout.logo.row) + rowHeight}" class="logo" text-anchor="end">©2026 ${style.logo}</text>
+<text x="${copyrightBox.centerX}" y="${copyrightBox.y + copyrightBox.height}" class="logo" text-anchor="middle" dominant-baseline="text-after-edge">©2026 ${style.logo}</text>
 </svg>
 `;
 }
@@ -540,15 +540,9 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
     const meaning = meaningLines(cardData.meaning, scale);
     const sentence = wrapText(cardData.sentence, scale.body, contentWidth);
     const phraseWidth = estimateTextWidth(cardData.phrase, scale.display);
-    const phraseFits = phraseWidth <= contentWidth;
-    const meaningBox = rowBox(
-        layout.meaningBox.rowStart,
-        layout.meaningBox.rowEnd
-    );
-    const exampleBox = rowBox(
-        layout.exampleBox.rowStart,
-        layout.exampleBox.rowEnd
-    );
+    const phraseFits = phraseWidth <= guideBox(layout.phrase).width;
+    const meaningBox = guideBox(layout.meaningBox);
+    const sentenceBox = guideBox(layout.sentenceBox);
     const meaningHeight = meaning.length * lineHeight(scale.body);
     const sentenceHeight = sentence.length * lineHeight(scale.body);
 
@@ -556,7 +550,7 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         fits:
             phraseFits &&
             meaningHeight <= meaningBox.height &&
-            sentenceHeight <= exampleBox.height,
+            sentenceHeight <= sentenceBox.height,
         meaning,
         sentence,
     };
@@ -692,12 +686,11 @@ function lineHeight(fontSize: number): number {
 }
 
 function phraseBlockMetrics(scale: (typeof typeScales)[number]) {
-    const readingHeight = Math.round(scale.body * 1.08);
+    const readingHeight = Math.round(scale.body * 1.35);
     const phraseHeight = Math.round(scale.display * 1.02);
 
     return {
         height: readingHeight + phraseHeight,
-        yOffset: -readingHeight,
     };
 }
 
@@ -723,46 +716,45 @@ function phraseRubyNode(
     ].join('');
 }
 
-function gridLineX(column: number): number {
-    return grid.marginLeft + (column - 1) * (columnWidth + grid.columnGutter);
+function guideX(position: number): number {
+    const track = Math.trunc(position);
+    const fraction = position - track;
+
+    return (
+        grid.marginLeft +
+        track * (columnWidth + grid.columnGutter) +
+        fraction * columnWidth
+    );
 }
 
-function gridBox(columnStart: number, columnEnd: number) {
-    const x = gridLineX(columnStart);
-    const endX = gridLineX(columnEnd) + columnWidth;
+function guideY(position: number): number {
+    const track = Math.trunc(position);
+    const fraction = position - track;
+
+    return (
+        grid.marginTop +
+        track * (rowHeight + grid.rowGutter) +
+        fraction * rowHeight
+    );
+}
+
+function guideBox(box: {
+    xEnd: number;
+    xStart: number;
+    yEnd: number;
+    yStart: number;
+}) {
+    const x = guideX(box.xStart);
+    const y = guideY(box.yStart);
+    const endX = guideX(box.xEnd);
+    const endY = guideY(box.yEnd);
 
     return {
+        centerX: x + (endX - x) / 2,
+        centerY: y + (endY - y) / 2,
+        height: endY - y,
         width: endX - x,
         x,
-    };
-}
-
-function rowLineY(row: number): number {
-    return grid.marginTop + (row - 1) * (rowHeight + grid.rowGutter);
-}
-
-function rowCenterY(row: number): number {
-    return rowLineY(row) + rowHeight / 2;
-}
-
-function rowBox(rowStart: number, rowEnd: number) {
-    const y = rowLineY(rowStart);
-    const endY = rowLineY(rowEnd) + rowHeight;
-
-    return {
-        height: endY - y,
         y,
-    };
-}
-
-function gridArea(
-    columnStart: number,
-    columnEnd: number,
-    rowStart: number,
-    rowEnd: number
-) {
-    return {
-        ...gridBox(columnStart, columnEnd),
-        ...rowBox(rowStart, rowEnd),
     };
 }

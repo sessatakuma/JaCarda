@@ -25,40 +25,51 @@ const COLUMN_WIDTH =
 const ROW_HEIGHT = (GRID_HEIGHT - (GRID.rows - 1) * GRID.rowGutter) / GRID.rows;
 
 const LAYOUT = {
-    exampleBox: {
-        columnEnd: 12,
-        columnStart: 2,
-        rowEnd: 15,
-        rowStart: 13,
+    copyright: {
+        xEnd: 11.5,
+        xStart: 8.5,
+        yEnd: 15.5,
+        yStart: 15.25,
     },
     exampleTitle: {
-        row: 12,
-    },
-    logo: {
-        columnEnd: 12,
-        columnStart: 10,
-        row: 16,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 12,
+        yStart: 10.5,
     },
     meaningBox: {
-        columnEnd: 12,
-        columnStart: 2,
-        rowEnd: 10,
-        rowStart: 8,
+        xEnd: 11,
+        xStart: 0.5,
+        yEnd: 10,
+        yStart: 6.5,
     },
     phrase: {
-        row: 5,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 5.5,
+        yStart: 3,
     },
     phraseRule: {
-        columnEnd: 12,
-        columnStart: 2,
-        row: 6,
+        xEnd: 10.5,
+        xStart: 1,
+        yEnd: 5.5,
+        yStart: 5,
+    },
+    sentenceBox: {
+        xEnd: 11,
+        xStart: 0.5,
+        yEnd: 14.5,
+        yStart: 12.5,
     },
     type: {
-        row: 2,
+        xEnd: 11.5,
+        xStart: 0,
+        yEnd: 2,
+        yStart: 0.5,
     },
 };
 
-const CONTENT_WIDTH = gridBox(2, 12).width;
+const CONTENT_WIDTH = guideBox(LAYOUT.meaningBox).width;
 
 const STYLE = {
     background: '#fbfbfb',
@@ -74,9 +85,9 @@ const STYLE = {
 };
 
 const TYPE_SCALES = [
-    { body: 52, display: 160, heading: 84, name: 'default' },
-    { body: 44, display: 136, heading: 72, name: 'compact' },
-    { body: 36, display: 112, heading: 60, name: 'dense' },
+    { body: 24, display: 96, heading: 48, logo: 12, name: 'default' },
+    { body: 22, display: 88, heading: 44, logo: 12, name: 'compact' },
+    { body: 20, display: 80, heading: 40, logo: 12, name: 'dense' },
 ];
 
 const REQUIRED_COLUMNS = ['phrase', 'meaning', 'sentence'];
@@ -445,39 +456,19 @@ function textPlan(card, scale) {
     const meaning = meaningLines(card.meaning, scale);
     const sentence = wrapText(card.sentence, scale.body, CONTENT_WIDTH);
     const phraseWidth = estimateTextWidth(card.phrase, scale.display);
-    const phraseFits = phraseWidth <= CONTENT_WIDTH;
-    const meaningBox = rowBox(
-        LAYOUT.meaningBox.rowStart,
-        LAYOUT.meaningBox.rowEnd
-    );
-    const exampleBox = rowBox(
-        LAYOUT.exampleBox.rowStart,
-        LAYOUT.exampleBox.rowEnd
-    );
+    const phraseFits = phraseWidth <= guideBox(LAYOUT.phrase).width;
+    const meaningBox = guideBox(LAYOUT.meaningBox);
+    const sentenceBox = guideBox(LAYOUT.sentenceBox);
     const meaningHeight = meaning.length * lineHeight(scale.body);
     const sentenceHeight = sentence.length * lineHeight(scale.body);
-    const totalHeight =
-        GRID.marginTop +
-        scale.heading +
-        GRID.rowGutter +
-        scale.display +
-        GRID.rowGutter +
-        meaningHeight +
-        GRID.rowGutter +
-        scale.heading +
-        GRID.rowGutter +
-        sentenceHeight +
-        GRID.marginBottom;
 
     return {
         fits:
             phraseFits &&
             meaningHeight <= meaningBox.height &&
-            sentenceHeight <= exampleBox.height &&
-            totalHeight <= CARD.height - GRID.marginTop - GRID.marginBottom,
+            sentenceHeight <= sentenceBox.height,
         meaning,
         sentence,
-        totalHeight,
     };
 }
 
@@ -519,30 +510,17 @@ function lineNodes(lines, options) {
 function renderCard(card) {
     const plan = choosePlan(card);
     const { scale } = plan;
-    const centerX = CARD.width / 2;
-    const meaningBox = gridArea(
-        LAYOUT.meaningBox.columnStart,
-        LAYOUT.meaningBox.columnEnd,
-        LAYOUT.meaningBox.rowStart,
-        LAYOUT.meaningBox.rowEnd
-    );
-    const exampleBox = gridArea(
-        LAYOUT.exampleBox.columnStart,
-        LAYOUT.exampleBox.columnEnd,
-        LAYOUT.exampleBox.rowStart,
-        LAYOUT.exampleBox.rowEnd
-    );
-    const phraseRuleBox = gridBox(
-        LAYOUT.phraseRule.columnStart,
-        LAYOUT.phraseRule.columnEnd
-    );
-    const meaningStartY = meaningBox.y + scale.body;
+    const typeBox = guideBox(LAYOUT.type);
+    const phraseBox = guideBox(LAYOUT.phrase);
+    const phraseRuleBox = guideBox(LAYOUT.phraseRule);
+    const meaningBox = guideBox(LAYOUT.meaningBox);
+    const exampleTitleBox = guideBox(LAYOUT.exampleTitle);
+    const sentenceBox = guideBox(LAYOUT.sentenceBox);
+    const copyrightBox = guideBox(LAYOUT.copyright);
+    const meaningStartY = meaningBox.y;
     const meaningLineHeight = lineHeight(scale.body);
-    const exampleTitleY =
-        rowCenterY(LAYOUT.exampleTitle.row) + scale.heading / 3;
-    const sentenceStartY = exampleBox.y + scale.body;
-    const underlineWidth = phraseRuleBox.width;
-    const underlineX = phraseRuleBox.x;
+    const sentenceStartY = sentenceBox.y;
+    const phraseBlock = phraseBlockMetrics(scale);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${CARD.width}" height="${CARD.height}" viewBox="0 0 ${CARD.width} ${CARD.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
@@ -599,26 +577,27 @@ text {
 .body {
     font-size: ${scale.body}px;
     fill: ${STYLE.mutedInk};
+    dominant-baseline: hanging;
 }
 .accent {
     fill: ${STYLE.accent};
 }
 .logo {
     font-family: ${STYLE.logoTypeface};
-    font-size: 32px;
+    font-size: ${scale.logo}px;
     fill: ${STYLE.mutedInk};
     font-weight: 700;
     letter-spacing: 0;
 }
 </style>
 <rect width="${CARD.width}" height="${CARD.height}" fill="${STYLE.background}"/>
-<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.type)}</text>
-<rect x="${underlineX}" y="${rowLineY(LAYOUT.phraseRule.row)}" width="${underlineWidth}" height="${ROW_HEIGHT}" rx="16" fill="${STYLE.accentSoft}"/>
+<text x="${typeBox.centerX}" y="${typeBox.centerY}" class="type" text-anchor="middle" dominant-baseline="middle">${escapeXml(card.type)}</text>
+<rect x="${phraseRuleBox.x}" y="${phraseRuleBox.y}" width="${phraseRuleBox.width}" height="${phraseRuleBox.height}" rx="16" fill="${STYLE.accentSoft}"/>
 ${phraseRubyNode(card, {
-    height: phraseBlockMetrics(scale).height,
-    width: CONTENT_WIDTH,
-    x: gridBox(2, 12).x,
-    y: rowLineY(LAYOUT.phrase.row) + phraseBlockMetrics(scale).yOffset,
+    height: phraseBlock.height,
+    width: phraseBox.width,
+    x: phraseBox.x,
+    y: phraseBox.centerY - phraseBlock.height / 2,
 })}
 ${lineNodes(plan.meaning, {
     className: 'body',
@@ -626,14 +605,14 @@ ${lineNodes(plan.meaning, {
     x: meaningBox.x,
     y: meaningStartY,
 })}
-<text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
+<text x="${exampleTitleBox.centerX}" y="${exampleTitleBox.centerY}" class="heading" text-anchor="middle" dominant-baseline="middle">例句</text>
 ${sentenceLineNodes(plan.sentence, card.phrase, {
     className: 'body',
     lineHeight: lineHeight(scale.body),
-    x: exampleBox.x,
+    x: sentenceBox.x,
     y: sentenceStartY,
 })}
-<text x="${CARD.width - GRID.marginRight}" y="${rowLineY(LAYOUT.logo.row) + ROW_HEIGHT}" class="logo" text-anchor="end">©2026 ${STYLE.logo}</text>
+<text x="${copyrightBox.centerX}" y="${copyrightBox.y + copyrightBox.height}" class="logo" text-anchor="middle" dominant-baseline="text-after-edge">©2026 ${STYLE.logo}</text>
 </svg>
 `;
 }
@@ -671,12 +650,11 @@ function sentenceLineNodes(lines, phrase, options) {
 }
 
 function phraseBlockMetrics(scale) {
-    const readingHeight = Math.round(scale.body * 1.08);
+    const readingHeight = Math.round(scale.body * 1.35);
     const phraseHeight = Math.round(scale.display * 1.02);
 
     return {
         height: readingHeight + phraseHeight,
-        yOffset: -readingHeight,
     };
 }
 
@@ -692,42 +670,41 @@ function phraseRubyNode(card, options) {
     ].join('');
 }
 
-function gridLineX(column) {
-    return GRID.marginLeft + (column - 1) * (COLUMN_WIDTH + GRID.columnGutter);
+function guideX(position) {
+    const track = Math.trunc(position);
+    const fraction = position - track;
+
+    return (
+        GRID.marginLeft +
+        track * (COLUMN_WIDTH + GRID.columnGutter) +
+        fraction * COLUMN_WIDTH
+    );
 }
 
-function gridBox(columnStart, columnEnd) {
-    const x = gridLineX(columnStart);
-    const endX = gridLineX(columnEnd) + COLUMN_WIDTH;
+function guideY(position) {
+    const track = Math.trunc(position);
+    const fraction = position - track;
+
+    return (
+        GRID.marginTop +
+        track * (ROW_HEIGHT + GRID.rowGutter) +
+        fraction * ROW_HEIGHT
+    );
+}
+
+function guideBox(box) {
+    const x = guideX(box.xStart);
+    const y = guideY(box.yStart);
+    const endX = guideX(box.xEnd);
+    const endY = guideY(box.yEnd);
 
     return {
+        centerX: x + (endX - x) / 2,
+        centerY: y + (endY - y) / 2,
+        height: endY - y,
         width: endX - x,
         x,
-    };
-}
-
-function rowLineY(row) {
-    return GRID.marginTop + (row - 1) * (ROW_HEIGHT + GRID.rowGutter);
-}
-
-function rowCenterY(row) {
-    return rowLineY(row) + ROW_HEIGHT / 2;
-}
-
-function rowBox(rowStart, rowEnd) {
-    const y = rowLineY(rowStart);
-    const endY = rowLineY(rowEnd) + ROW_HEIGHT;
-
-    return {
-        height: endY - y,
         y,
-    };
-}
-
-function gridArea(columnStart, columnEnd, rowStart, rowEnd) {
-    return {
-        ...gridBox(columnStart, columnEnd),
-        ...rowBox(rowStart, rowEnd),
     };
 }
 
