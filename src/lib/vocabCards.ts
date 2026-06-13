@@ -21,8 +21,8 @@ const grid = {
     columnGutter: 24,
     columns: 12,
     marginBottom: 36,
-    marginLeft: 48,
-    marginRight: 48,
+    marginLeft: 56,
+    marginRight: 56,
     marginTop: 36,
     rowGutter: 24,
     rows: 16,
@@ -62,7 +62,7 @@ const layout = {
     phraseRule: {
         xEnd: 10.5,
         xStart: 1,
-        yEnd: 5.5,
+        yEnd: 5.75,
         yStart: 5,
     },
     sentenceBox: {
