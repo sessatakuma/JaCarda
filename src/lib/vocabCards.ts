@@ -98,11 +98,9 @@ const typeScales = [
     { body: 48, display: 180, heading: 96, logo: 24, name: 'default' },
     { body: 29.33, display: 117.33, heading: 58.67, logo: 16, name: 'compact' },
     { body: 26.67, display: 106.67, heading: 53.33, logo: 16, name: 'dense' },
-    { body: 24, display: 80, heading: 48, logo: 16, name: 'narrow' },
-    { body: 20, display: 64, heading: 40, logo: 16, name: 'tight' },
-    { body: 16, display: 48, heading: 32, logo: 16, name: 'small' },
-    { body: 16, display: 40, heading: 32, logo: 16, name: 'tiny' },
 ];
+
+const phraseFitFontSizes = [180, 160, 144, 128, 112, 96, 80, 64, 56, 48, 40];
 
 type CsvField = Exclude<keyof VocabCard, 'rowNumber'>;
 
@@ -262,6 +260,15 @@ export function renderVocabCard(cardData: VocabCard): string {
     const meaningLineHeight = lineHeight(scale.body);
     const sentenceStartY = sentenceBox.y;
     const phraseBlock = phraseBlockMetrics(scale);
+    const phraseRenderBox = cardData.reading.trim()
+        ? {
+              height: phraseBlock.height,
+              y: phraseBox.centerY - phraseBlock.height / 2,
+          }
+        : {
+              height: phraseBox.height,
+              y: phraseBox.y,
+          };
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${card.width}" height="${card.height}" viewBox="0 0 ${card.width} ${card.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
@@ -331,11 +338,11 @@ text {
 <text x="${typeBox.centerX}" y="${typeBox.centerY}" class="type" data-field="type" text-anchor="middle" dominant-baseline="middle">${escapeXml(cardData.type)}</text>
 <rect x="${phraseRuleBox.x}" y="${phraseRuleBox.y}" width="${phraseRuleBox.width}" height="${phraseRuleBox.height}" rx="16" fill="${style.accentSoft}"/>
 ${phraseRubyNode(cardData, {
-    height: phraseBlock.height,
+    height: phraseRenderBox.height,
     scale,
     width: phraseBox.width,
     x: phraseBox.x,
-    y: phraseBox.centerY - phraseBlock.height / 2,
+    y: phraseRenderBox.y,
 })}
 ${lineNodes(plan.meaning, {
     className: 'body',
@@ -536,6 +543,40 @@ function wrapDisplayPhrase(
     return lines.length > 0 ? lines : [''];
 }
 
+function fitPlainPhrase(
+    phrase: string,
+    preferredFontSize: number,
+    maxWidth: number,
+    maxHeight: number
+): { fontSize: number; lines: Array<string> } {
+    const fontSizes = [
+        preferredFontSize,
+        ...phraseFitFontSizes.filter(
+            (fontSize) => fontSize < preferredFontSize
+        ),
+    ];
+
+    for (const fontSize of fontSizes) {
+        const lines = wrapDisplayPhrase(phrase, fontSize, maxWidth);
+        const fitsWidth = lines.every(
+            (line) => estimateTextWidth(line, fontSize) <= maxWidth
+        );
+        const fitsHeight =
+            lines.length * displayLineHeight(fontSize) <= maxHeight;
+
+        if (fitsWidth && (lines.length === 1 || fitsHeight)) {
+            return { fontSize, lines };
+        }
+    }
+
+    const fontSize = fontSizes.at(-1) ?? preferredFontSize;
+
+    return {
+        fontSize,
+        lines: wrapDisplayPhrase(phrase, fontSize, maxWidth),
+    };
+}
+
 function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
     const rawItems = meaning
         .replaceAll('\\n', '\n')
@@ -568,15 +609,14 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
     const meaning = meaningLines(cardData.meaning, scale);
     const sentence = wrapText(cardData.sentence, scale.body, contentWidth);
     const phraseBox = guideBox(layout.phrase);
-    const phraseLines = cardData.reading.trim()
-        ? [cardData.phrase]
-        : wrapDisplayPhrase(cardData.phrase, scale.display, phraseBox.width);
-    const phraseFits =
-        phraseLines.every(
-            (line) => estimateTextWidth(line, scale.display) <= phraseBox.width
-        ) &&
-        phraseLines.length * displayLineHeight(scale.display) <=
-            phraseBox.height;
+    const phraseFits = cardData.reading.trim()
+        ? estimateTextWidth(cardData.phrase, scale.display) <= phraseBox.width
+        : fitPlainPhrase(
+              cardData.phrase,
+              typeScales[0].display,
+              phraseBox.width,
+              phraseBox.height
+          ).lines.length > 0;
     const meaningBox = guideBox(layout.meaningBox);
     const sentenceBox = guideBox(layout.sentenceBox);
     const meaningHeight = meaning.length * lineHeight(scale.body);
@@ -815,19 +855,20 @@ function plainPhraseNodes(
         y: number;
     }
 ): string {
-    const lines = wrapDisplayPhrase(
+    const phraseFit = fitPlainPhrase(
         phrase,
-        options.scale.display,
-        options.width
+        typeScales[0].display,
+        options.width,
+        options.height
     );
-    const lineGap = displayLineHeight(options.scale.display);
+    const lineGap = displayLineHeight(phraseFit.fontSize);
     const centerY = options.y + options.height / 2;
-    const firstY = centerY - ((lines.length - 1) * lineGap) / 2;
+    const firstY = centerY - ((phraseFit.lines.length - 1) * lineGap) / 2;
 
-    return lines
+    return phraseFit.lines
         .map(
             (line, index) =>
-                `<text x="${options.centerX}" y="${firstY + index * lineGap}" class="${options.className}"${options.dataField} text-anchor="middle" dominant-baseline="middle">${escapeXml(line)}</text>`
+                `<text x="${options.centerX}" y="${firstY + index * lineGap}" class="${options.className}"${options.dataField} font-size="${phraseFit.fontSize}" text-anchor="middle" dominant-baseline="middle">${escapeXml(line)}</text>`
         )
         .join('');
 }

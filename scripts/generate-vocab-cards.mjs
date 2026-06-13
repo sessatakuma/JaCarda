@@ -88,11 +88,9 @@ const TYPE_SCALES = [
     { body: 32, display: 128, heading: 64, logo: 16, name: 'default' },
     { body: 29.33, display: 117.33, heading: 58.67, logo: 16, name: 'compact' },
     { body: 26.67, display: 106.67, heading: 53.33, logo: 16, name: 'dense' },
-    { body: 24, display: 80, heading: 48, logo: 16, name: 'narrow' },
-    { body: 20, display: 64, heading: 40, logo: 16, name: 'tight' },
-    { body: 16, display: 48, heading: 32, logo: 16, name: 'small' },
-    { body: 16, display: 40, heading: 32, logo: 16, name: 'tiny' },
 ];
+
+const PHRASE_FIT_FONT_SIZES = [180, 160, 144, 128, 112, 96, 80, 64, 56, 48, 40];
 
 const REQUIRED_COLUMNS = ['phrase', 'meaning', 'sentence'];
 
@@ -456,6 +454,35 @@ function wrapDisplayPhrase(text, fontSize, maxWidth) {
     return lines.length > 0 ? lines : [''];
 }
 
+function fitPlainPhrase(phrase, preferredFontSize, maxWidth, maxHeight) {
+    const fontSizes = [
+        preferredFontSize,
+        ...PHRASE_FIT_FONT_SIZES.filter(
+            (fontSize) => fontSize < preferredFontSize
+        ),
+    ];
+
+    for (const fontSize of fontSizes) {
+        const lines = wrapDisplayPhrase(phrase, fontSize, maxWidth);
+        const fitsWidth = lines.every(
+            (line) => estimateTextWidth(line, fontSize) <= maxWidth
+        );
+        const fitsHeight =
+            lines.length * displayLineHeight(fontSize) <= maxHeight;
+
+        if (fitsWidth && (lines.length === 1 || fitsHeight)) {
+            return { fontSize, lines };
+        }
+    }
+
+    const fontSize = fontSizes.at(-1) ?? preferredFontSize;
+
+    return {
+        fontSize,
+        lines: wrapDisplayPhrase(phrase, fontSize, maxWidth),
+    };
+}
+
 function meaningLines(meaning, scale) {
     const rawItems = meaning
         .replaceAll('\\n', '\n')
@@ -489,15 +516,14 @@ function textPlan(card, scale) {
     const meaning = meaningLines(card.meaning, scale);
     const sentence = wrapText(card.sentence, scale.body, CONTENT_WIDTH);
     const phraseBox = guideBox(LAYOUT.phrase);
-    const phraseLines = card.reading.trim()
-        ? [card.phrase]
-        : wrapDisplayPhrase(card.phrase, scale.display, phraseBox.width);
-    const phraseFits =
-        phraseLines.every(
-            (line) => estimateTextWidth(line, scale.display) <= phraseBox.width
-        ) &&
-        phraseLines.length * displayLineHeight(scale.display) <=
-            phraseBox.height;
+    const phraseFits = card.reading.trim()
+        ? estimateTextWidth(card.phrase, scale.display) <= phraseBox.width
+        : fitPlainPhrase(
+              card.phrase,
+              TYPE_SCALES[0].display,
+              phraseBox.width,
+              phraseBox.height
+          ).lines.length > 0;
     const meaningBox = guideBox(LAYOUT.meaningBox);
     const sentenceBox = guideBox(LAYOUT.sentenceBox);
     const meaningHeight = meaning.length * lineHeight(scale.body);
@@ -562,6 +588,15 @@ function renderCard(card) {
     const meaningLineHeight = lineHeight(scale.body);
     const sentenceStartY = sentenceBox.y;
     const phraseBlock = phraseBlockMetrics(scale);
+    const phraseRenderBox = card.reading.trim()
+        ? {
+              height: phraseBlock.height,
+              y: phraseBox.centerY - phraseBlock.height / 2,
+          }
+        : {
+              height: phraseBox.height,
+              y: phraseBox.y,
+          };
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${CARD.width}" height="${CARD.height}" viewBox="0 0 ${CARD.width} ${CARD.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
@@ -631,11 +666,11 @@ text {
 <text x="${typeBox.centerX}" y="${typeBox.centerY}" class="type" text-anchor="middle" dominant-baseline="middle">${escapeXml(card.type)}</text>
 <rect x="${phraseRuleBox.x}" y="${phraseRuleBox.y}" width="${phraseRuleBox.width}" height="${phraseRuleBox.height}" rx="16" fill="${STYLE.accentSoft}"/>
 ${phraseRubyNode(card, {
-    height: phraseBlock.height,
+    height: phraseRenderBox.height,
     scale,
     width: phraseBox.width,
     x: phraseBox.x,
-    y: phraseBox.centerY - phraseBlock.height / 2,
+    y: phraseRenderBox.y,
 })}
 ${lineNodes(plan.meaning, {
     className: 'body',
@@ -761,19 +796,20 @@ function phraseRubyNode(card, options) {
 }
 
 function plainPhraseNodes(phrase, options) {
-    const lines = wrapDisplayPhrase(
+    const phraseFit = fitPlainPhrase(
         phrase,
-        options.scale.display,
-        options.width
+        TYPE_SCALES[0].display,
+        options.width,
+        options.height
     );
-    const lineGap = displayLineHeight(options.scale.display);
+    const lineGap = displayLineHeight(phraseFit.fontSize);
     const centerY = options.y + options.height / 2;
-    const firstY = centerY - ((lines.length - 1) * lineGap) / 2;
+    const firstY = centerY - ((phraseFit.lines.length - 1) * lineGap) / 2;
 
-    return lines
+    return phraseFit.lines
         .map(
             (line, index) =>
-                `<text x="${options.centerX}" y="${firstY + index * lineGap}" class="${options.className}"${options.dataField} text-anchor="middle" dominant-baseline="middle">${escapeXml(line)}</text>`
+                `<text x="${options.centerX}" y="${firstY + index * lineGap}" class="${options.className}"${options.dataField} font-size="${phraseFit.fontSize}" text-anchor="middle" dominant-baseline="middle">${escapeXml(line)}</text>`
         )
         .join('');
 }
