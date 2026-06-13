@@ -862,7 +862,7 @@ function plainPhraseNodes(
         options.height
     );
     const lineGap = displayLineHeight(phraseFit.fontSize);
-    const centerY = options.y + options.height / 2;
+    const centerY = options.y + options.height * 0.62;
     const firstY = centerY - ((phraseFit.lines.length - 1) * lineGap) / 2;
 
     return phraseFit.lines
