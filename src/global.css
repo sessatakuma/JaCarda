@@ -365,6 +365,7 @@ button:disabled {
 
 .preview-download {
     justify-self: center;
+    margin-bottom: var(--space-3);
 }
 
 .button {
