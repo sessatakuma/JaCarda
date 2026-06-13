@@ -1,8 +1,6 @@
 :root {
-    --ff-body:
-        'Nunito Sans', 'Avenir Next Rounded', 'IBM Plex Sans', sans-serif;
-    --ff-display:
-        'Nunito Sans', 'Avenir Next Rounded', 'IBM Plex Sans', sans-serif;
+    --ff-body: 'Noto Sans JP', sans-serif;
+    --ff-display: 'Noto Sans JP', sans-serif;
 
     --fs-label: 0.75rem;
     --fs-body: 1rem;

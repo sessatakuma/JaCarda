@@ -134,10 +134,6 @@ button:disabled {
         opacity var(--duration-interaction-fast) ease;
 }
 
-.nav-sheet-button {
-    margin-left: var(--space-2);
-}
-
 .nav-guide-button-label {
     font-size: 0.875rem;
     font-weight: 600;
@@ -176,6 +172,13 @@ button:disabled {
     align-items: end;
     justify-content: space-between;
     margin-bottom: var(--space-6);
+}
+
+.studio-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: flex-end;
 }
 
 .studio-eyebrow {
@@ -639,6 +642,10 @@ button:disabled {
     outline-offset: var(--space-1);
 }
 
+.footer-social-svg {
+    display: block;
+}
+
 .site-footer-email-link {
     justify-self: end;
     width: fit-content;
@@ -764,7 +771,7 @@ button:disabled {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .nav {
         padding: 0 var(--space-4);
     }

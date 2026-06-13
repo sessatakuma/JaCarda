@@ -1,8 +1,8 @@
 :root {
     accent-color: var(--clr-accent);
 
-    --clr-bg: #f4f2ee;
-    --clr-bg-accent: rgba(109, 165, 142, 0.16);
+    --clr-bg: hsl(0, 8%, 90%);
+    --clr-bg-accent: rgba(97, 158, 131, 0.16);
     --clr-bg-card: #fbfbfb;
     --clr-surface: #fbfbfb;
     --clr-surface-elevated: color-mix(in srgb, var(--clr-surface) 88%, white);
@@ -16,8 +16,8 @@
         var(--clr-border) 70%,
         var(--clr-text)
     );
-    --clr-accent: #6da58e;
-    --clr-card-accent: #6da58e;
+    --clr-accent: #619e83;
+    --clr-card-accent: #619e83;
     --clr-guide: #2387ff;
     --clr-charcoal: #303030;
     --clr-error: #d25a3c;
@@ -26,16 +26,16 @@
     --shadow-surface: 0 24px 48px rgba(36, 43, 54, 0.08);
     --shadow-card: 0 32px 80px rgba(36, 43, 54, 0.14);
 
-    --color-bg-primary: #e9e5e4;
+    --color-bg-primary: hsl(0, 8%, 90%);
     --color-bg-secondary: #ffffff;
     --color-bg-secondary-hover: #fafaf9;
-    --color-text-primary: #242b36;
-    --color-text-secondary: #596579;
+    --color-text-primary: #1f2937;
+    --color-text-secondary: #6b7280;
     --color-text-inverted: #ffffff;
-    --color-accent-green: #6da58e;
+    --color-accent-green: #619e83;
     --color-accent-green-hover: #4e7e69;
-    --color-accent-green-light: #dceee8;
-    --color-border: #cfcfcf;
+    --color-accent-green-light: #eff7f4;
+    --color-border: #e5e7eb;
     --color-feedback-success: var(--color-accent-green);
     --color-feedback-warning: #d25a3c;
 }
