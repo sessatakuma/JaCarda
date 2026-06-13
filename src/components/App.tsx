@@ -541,17 +541,11 @@ function UsageSection(): JSX.Element {
                             <h3>Set up the Sheet</h3>
                             <p>
                                 Use a public or published Google Sheet with
-                                phrase, meaning, and sentence columns. Add type,
-                                reading, or usedAt when needed.
+                                <code>phrase</code>, <code>meaning</code>, and
+                                <code>sentence</code> columns. Add
+                                <code>type</code>, <code>reading</code>, or
+                                <code>usedAt</code> when needed.
                             </p>
-                            <div className='usage-code-list'>
-                                <code>phrase</code>
-                                <code>meaning</code>
-                                <code>sentence</code>
-                                <code>type</code>
-                                <code>reading</code>
-                                <code>usedAt</code>
-                            </div>
                         </div>
                     </article>
 
@@ -560,12 +554,9 @@ function UsageSection(): JSX.Element {
                             <h3>Write readings clearly</h3>
                             <p>
                                 Put furigana in the reading column, or append it
-                                to the phrase with Japanese or ASCII brackets.
+                                to the phrase like <code>散歩（さんぽ）</code>{' '}
+                                or <code>散歩(さんぽ)</code>.
                             </p>
-                            <div className='usage-code-list'>
-                                <code>散歩（さんぽ）</code>
-                                <code>散歩(さんぽ)</code>
-                            </div>
                         </div>
                     </article>
 
@@ -575,13 +566,9 @@ function UsageSection(): JSX.Element {
                             <p>
                                 A single meaning stays unnumbered. Multiple
                                 meanings become a numbered list when separated
-                                by new lines, semicolons, or pipes.
+                                by new lines, semicolons, or pipes, such as
+                                <code>to study | to learn</code>.
                             </p>
-                            <div className='usage-code-list'>
-                                <code>to walk</code>
-                                <code>to study | to learn</code>
-                                <code>to study; to learn</code>
-                            </div>
                         </div>
                     </article>
 
@@ -596,24 +583,6 @@ function UsageSection(): JSX.Element {
                             </p>
                         </div>
                     </article>
-                </div>
-
-                <div className='usage-reference' aria-label='Format reference'>
-                    <section>
-                        <h3>Accepted aliases</h3>
-                        <p>
-                            phrase also accepts word, vocab, term, 語彙, or 詞.
-                            sentence also accepts example, examples, 例句, or
-                            例文.
-                        </p>
-                    </section>
-                    <section>
-                        <h3>Writeback setup</h3>
-                        <p>
-                            The deployed Apps Script is already configured. The
-                            script owner still needs edit access to the Sheet.
-                        </p>
-                    </section>
                 </div>
             </div>
         </section>
