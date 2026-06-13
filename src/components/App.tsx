@@ -10,7 +10,6 @@ import {
 
 import {
     fetchSheetCards,
-    googleSheetCsvUrl,
     parseCsvCards,
     renderVocabCard,
     sampleCsv,
@@ -49,7 +48,6 @@ export function App(): JSX.Element {
         cards[0] ??
         sampleCards[0];
     const previewSvg = renderVocabCard(selectedCard);
-    const csvUrl = safeCsvUrl(sheetUrl);
 
     useEffect(() => {
         void connectToSheet(defaultSheetUrl);
@@ -68,9 +66,10 @@ export function App(): JSX.Element {
             window.localStorage.setItem(webhookStorageKey, draftWebhookUrl);
             setWebhookUrl(draftWebhookUrl);
             setConnectionState('ready');
-            setConnectionMessage(
-                `Connected ${nextCards.length} row(s), ${nextCards.filter((card) => !card.usedAt?.trim()).length} unused.`
-            );
+            const unusedCount = nextCards.filter(
+                (card) => !card.usedAt?.trim()
+            ).length;
+            setConnectionMessage(`${unusedCount} unused rows`);
             setIsDialogOpen(false);
         } catch (error) {
             setConnectionState('error');
@@ -192,34 +191,6 @@ export function App(): JSX.Element {
             <Nav />
             <main className='app' id='main-content'>
                 <section className='studio-shell' aria-label='Card studio'>
-                    <div className='studio-toolbar'>
-                        <div>
-                            <p className='studio-eyebrow'>Vocabulary Cards</p>
-                            <h1>{selectedCard.phrase}</h1>
-                        </div>
-                        <div className='studio-actions'>
-                            <button
-                                className='button button--ghost'
-                                type='button'
-                                onClick={() => {
-                                    setIsDialogOpen(true);
-                                }}
-                            >
-                                {connectionState === 'loading'
-                                    ? 'Connecting...'
-                                    : 'Connect Google Sheet'}
-                            </button>
-                            <button
-                                className='button button--primary'
-                                type='button'
-                                onClick={downloadCurrent}
-                            >
-                                <Download size={20} aria-hidden='true' />
-                                Download SVG
-                            </button>
-                        </div>
-                    </div>
-
                     <div className='studio-grid'>
                         <aside className='row-panel' aria-label='Sheet rows'>
                             <div
@@ -231,10 +202,17 @@ export function App(): JSX.Element {
                                 />
                                 <p>{connectionMessage}</p>
                             </div>
-                            <p className='unused-count'>
-                                Showing {unusedCards.length} unused of{' '}
-                                {cards.length} rows.
-                            </p>
+                            <button
+                                className='button button--ghost'
+                                type='button'
+                                onClick={() => {
+                                    setIsDialogOpen(true);
+                                }}
+                            >
+                                {connectionState === 'loading'
+                                    ? 'Connecting...'
+                                    : 'Connect Google Sheet'}
+                            </button>
                             <div className='row-list'>
                                 {unusedCards.map((card, index) => (
                                     <button
@@ -334,20 +312,22 @@ export function App(): JSX.Element {
                             className='preview-panel'
                             aria-label='Editable SVG preview'
                         >
-                            <div className='preview-panel-header'>
-                                <p>Double-click text on the SVG to edit it.</p>
-                                <p>1080 x 1350</p>
-                            </div>
                             <div
                                 className='svg-preview'
                                 dangerouslySetInnerHTML={{ __html: previewSvg }}
                                 onDoubleClick={editSvgText}
                             />
+                            <button
+                                className='button button--primary preview-download'
+                                type='button'
+                                onClick={downloadCurrent}
+                            >
+                                <Download size={20} aria-hidden='true' />
+                                Download SVG
+                            </button>
                         </section>
                     </div>
                 </section>
-
-                <ReferenceSection csvUrl={csvUrl} />
             </main>
             <Footer />
 
@@ -433,7 +413,7 @@ function Nav(): JSX.Element {
             </div>
             <a
                 className='nav-guide-button'
-                href='#usage-guide'
+                href='#main-content'
                 title='Usage'
                 aria-label='Usage: Sheet rows, editable SVG, export-ready cards.'
             >
@@ -441,90 +421,6 @@ function Nav(): JSX.Element {
                 <span className='nav-guide-button-label'>Guide</span>
             </a>
         </header>
-    );
-}
-
-function ReferenceSection({ csvUrl }: { csvUrl?: string }): JSX.Element {
-    return (
-        <section className='usage-section' aria-labelledby='reference-heading'>
-            <div className='usage-section-inner'>
-                <div className='usage-pitch-primer'>
-                    <div className='usage-pitch-intro'>
-                        <div className='usage-section-copy'>
-                            <h2 id='reference-heading'>
-                                Sheet rows, editable SVG, export-ready cards.
-                            </h2>
-                        </div>
-                        <div className='usage-pitch-copy'>
-                            <p>
-                                JaCarda reads type, phrase, meaning, and
-                                sentence columns from Google Sheets, then
-                                renders the 1080x1350 Affinity-aligned SVG card.
-                            </p>
-                        </div>
-                    </div>
-                    <div className='usage-pitch-states'>
-                        <article className='usage-pitch-state'>
-                            <div
-                                className='usage-pitch-mark'
-                                aria-hidden='true'
-                            >
-                                1
-                            </div>
-                            <h4>Connect</h4>
-                            <p>
-                                Use the default Sheet or paste a published Sheet
-                                URL.
-                            </p>
-                        </article>
-                        <article className='usage-pitch-state'>
-                            <div
-                                className='usage-pitch-mark'
-                                aria-hidden='true'
-                            >
-                                2
-                            </div>
-                            <h4>Edit</h4>
-                            <p>
-                                Double-click SVG text to make local ad hoc
-                                changes.
-                            </p>
-                        </article>
-                        <article className='usage-pitch-state'>
-                            <div
-                                className='usage-pitch-mark'
-                                aria-hidden='true'
-                            >
-                                3
-                            </div>
-                            <h4>Download</h4>
-                            <p>
-                                Export the selected card as an editable SVG
-                                file.
-                            </p>
-                        </article>
-                    </div>
-                </div>
-                <div
-                    id='usage-guide'
-                    className='usage-guide'
-                    aria-label='Reference details'
-                >
-                    <article className='usage-guide-card'>
-                        <div className='usage-guide-preview' aria-hidden='true'>
-                            <span className='reference-preview-token'>CSV</span>
-                        </div>
-                        <div className='usage-guide-copy'>
-                            <h3>Current CSV export</h3>
-                            <p>
-                                {csvUrl ??
-                                    'Connect a Sheet to show its CSV export URL.'}
-                            </p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
     );
 }
 
@@ -671,12 +567,4 @@ function Footer(): JSX.Element {
             </p>
         </footer>
     );
-}
-
-function safeCsvUrl(sheetUrl: string): string | undefined {
-    try {
-        return googleSheetCsvUrl(sheetUrl) ?? sheetUrl;
-    } catch {
-        return undefined;
-    }
 }
