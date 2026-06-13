@@ -26,26 +26,30 @@ import {
     type VocabCard,
 } from '../lib/vocabCards.js';
 
-const defaultSheetUrl =
-    'https://docs.google.com/spreadsheets/d/17l4NXhq_qJJvo8UMAdxNhhjkgfX9HlI0rRopcgdK_cQ/edit?gid=0#gid=0';
+const sheetStorageKey = 'jacarda-sheet-url';
 const webhookStorageKey = 'jacarda-sheet-webhook-url';
 const sampleCards = parseCsvCards(sampleCsv);
 
 type ConnectionState = 'error' | 'loading' | 'ready';
 
 export function App(): JSX.Element {
-    const [sheetUrl, setSheetUrl] = useState(defaultSheetUrl);
-    const [draftSheetUrl, setDraftSheetUrl] = useState(defaultSheetUrl);
+    const [sheetUrl, setSheetUrl] = useState(
+        () => window.localStorage.getItem(sheetStorageKey) ?? ''
+    );
+    const [draftSheetUrl, setDraftSheetUrl] = useState(sheetUrl);
     const [cards, setCards] = useState<Array<VocabCard>>(sampleCards);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [webhookUrl, setWebhookUrl] = useState(
         () => window.localStorage.getItem(webhookStorageKey) ?? ''
     );
     const [draftWebhookUrl, setDraftWebhookUrl] = useState(webhookUrl);
-    const [connectionState, setConnectionState] =
-        useState<ConnectionState>('loading');
-    const [connectionMessage, setConnectionMessage] = useState(
-        'Connecting to the default Sheet...'
+    const [connectionState, setConnectionState] = useState<ConnectionState>(
+        () => (sheetUrl ? 'loading' : 'ready')
+    );
+    const [connectionMessage, setConnectionMessage] = useState(() =>
+        sheetUrl
+            ? 'Connecting to Google Sheets...'
+            : 'No Google Sheet connected.'
     );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -62,19 +66,36 @@ export function App(): JSX.Element {
     const previewSvg = renderVocabCard(selectedCard);
 
     useEffect(() => {
-        void connectToSheet(defaultSheetUrl);
+        if (sheetUrl) {
+            void connectToSheet(sheetUrl);
+        }
     }, []);
 
     async function connectToSheet(nextSheetUrl: string): Promise<void> {
+        const normalizedSheetUrl = nextSheetUrl.trim();
+
+        if (!normalizedSheetUrl) {
+            setCards(sampleCards);
+            setSelectedIndex(0);
+            setSheetUrl('');
+            setDraftSheetUrl('');
+            window.localStorage.removeItem(sheetStorageKey);
+            setConnectionState('ready');
+            setConnectionMessage('No Google Sheet connected.');
+            setIsDialogOpen(false);
+            return;
+        }
+
         setConnectionState('loading');
         setConnectionMessage('Connecting to Google Sheets...');
 
         try {
-            const nextCards = await fetchSheetCards(nextSheetUrl);
+            const nextCards = await fetchSheetCards(normalizedSheetUrl);
             setCards(nextCards);
             setSelectedIndex(0);
-            setSheetUrl(nextSheetUrl);
-            setDraftSheetUrl(nextSheetUrl);
+            setSheetUrl(normalizedSheetUrl);
+            setDraftSheetUrl(normalizedSheetUrl);
+            window.localStorage.setItem(sheetStorageKey, normalizedSheetUrl);
             window.localStorage.setItem(webhookStorageKey, draftWebhookUrl);
             setWebhookUrl(draftWebhookUrl);
             setConnectionState('ready');
@@ -440,8 +461,8 @@ export function App(): JSX.Element {
                         >
                             <h2>Connect Google Sheet</h2>
                             <p>
-                                The default Sheet is prefilled. Use a public or
-                                published Sheet URL.
+                                Use a public or published Sheet URL. This stays
+                                on this device.
                             </p>
                             <label className='sheet-dialog-field'>
                                 <span>Sheet URL</span>
