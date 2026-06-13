@@ -551,7 +551,8 @@ function AppButton({
 
 async function svgToPngBlob(svg: string): Promise<Blob> {
     const image = new Image();
-    const svgBlob = new Blob([svg], {
+    const exportSvg = await inlineSvgAssets(svg);
+    const svgBlob = new Blob([exportSvg], {
         type: 'image/svg+xml;charset=utf-8',
     });
     const svgUrl = URL.createObjectURL(svgBlob);
@@ -592,6 +593,67 @@ async function svgToPngBlob(svg: string): Promise<Blob> {
     } finally {
         URL.revokeObjectURL(svgUrl);
     }
+}
+
+const assetDataUrlCache = new Map<string, Promise<string>>();
+
+async function inlineSvgAssets(svg: string): Promise<string> {
+    const assetUrls = Array.from(
+        svg.matchAll(/url\((['"]?)([^'")]+)\1\)/g),
+        (match) => match[2]
+    ).filter((url) => !url.startsWith('data:'));
+
+    let inlinedSvg = svg;
+
+    for (const assetUrl of new Set(assetUrls)) {
+        const dataUrl = await fetchAssetDataUrl(assetUrl);
+        inlinedSvg = inlinedSvg.replaceAll(assetUrl, dataUrl);
+    }
+
+    return inlinedSvg;
+}
+
+function fetchAssetDataUrl(assetUrl: string): Promise<string> {
+    const cached = assetDataUrlCache.get(assetUrl);
+
+    if (cached) {
+        return cached;
+    }
+
+    const promise = fetch(assetUrl)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(
+                    `Could not load ${assetUrl} for PNG export (${response.status} ${response.statusText}).`
+                );
+            }
+
+            return response.blob();
+        })
+        .then(blobToDataUrl);
+
+    assetDataUrlCache.set(assetUrl, promise);
+
+    return promise;
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.addEventListener('load', () => {
+            if (typeof reader.result !== 'string') {
+                reject(new Error('Could not read SVG asset for PNG export.'));
+                return;
+            }
+
+            resolve(reader.result);
+        });
+        reader.addEventListener('error', () => {
+            reject(new Error('Could not read SVG asset for PNG export.'));
+        });
+        reader.readAsDataURL(blob);
+    });
 }
 
 async function savePngBlob(blob: Blob, filename: string): Promise<void> {
