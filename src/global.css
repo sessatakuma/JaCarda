@@ -338,6 +338,7 @@ button:disabled {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     gap: var(--space-4);
+    min-height: 0;
     padding: var(--space-4);
 }
 
@@ -346,7 +347,10 @@ button:disabled {
     place-items: center;
     align-self: center;
     justify-self: center;
-    width: min(100%, 520px);
+    width: auto;
+    max-width: min(100%, var(--size-preview-max));
+    height: 100%;
+    max-height: var(--size-preview-height-max);
     aspect-ratio: 4 / 5;
     min-height: 0;
     border: 1px solid var(--color-border);
