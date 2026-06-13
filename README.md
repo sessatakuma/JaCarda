@@ -33,6 +33,7 @@ The card generator reads CSV rows with `type`, `phrase`, `meaning`, and
 
 The source Affinity file is a private binary document. It was opened in the
 macOS Affinity app after direct parsing failed; the script follows the exposed
-408x512 preview geometry and snaps layout values to the card grid. Each card
+1080x1350 document geometry and the configured guide grid: 12 columns, 16 rows,
+24px gutters, 48px left/right margins, and 36px top/bottom margins. Each card
 uses exactly three non-logo font sizes by switching between whole-card
 typography scales when text gets longer.

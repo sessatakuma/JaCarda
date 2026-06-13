@@ -3,18 +3,62 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const CARD = {
-    height: 512,
-    width: 408,
+    height: 1350,
+    width: 1080,
 };
 
 const GRID = {
-    columnGap: 16,
-    columns: 4,
-    margin: 40,
-    row: 4,
+    columnGutter: 24,
+    columns: 12,
+    marginBottom: 36,
+    marginLeft: 48,
+    marginRight: 48,
+    marginTop: 36,
+    rowGutter: 24,
+    rows: 16,
 };
 
-const CONTENT_WIDTH = CARD.width - GRID.margin * 2;
+const GRID_WIDTH = CARD.width - GRID.marginLeft - GRID.marginRight;
+const GRID_HEIGHT = CARD.height - GRID.marginTop - GRID.marginBottom;
+const COLUMN_WIDTH =
+    (GRID_WIDTH - (GRID.columns - 1) * GRID.columnGutter) / GRID.columns;
+const ROW_HEIGHT = (GRID_HEIGHT - (GRID.rows - 1) * GRID.rowGutter) / GRID.rows;
+
+const LAYOUT = {
+    exampleBox: {
+        columnEnd: 12,
+        columnStart: 2,
+        rowEnd: 15,
+        rowStart: 13,
+    },
+    exampleTitle: {
+        row: 12,
+    },
+    logo: {
+        columnEnd: 12,
+        columnStart: 10,
+        row: 16,
+    },
+    meaningBox: {
+        columnEnd: 12,
+        columnStart: 2,
+        rowEnd: 10,
+        rowStart: 8,
+    },
+    phrase: {
+        row: 5,
+    },
+    phraseRule: {
+        columnEnd: 12,
+        columnStart: 2,
+        row: 6,
+    },
+    type: {
+        row: 2,
+    },
+};
+
+const CONTENT_WIDTH = gridBox(2, 12).width;
 
 const STYLE = {
     background: '#fbfbfb',
@@ -28,9 +72,9 @@ const STYLE = {
 };
 
 const TYPE_SCALES = [
-    { body: 20, display: 56, heading: 32, name: 'default' },
-    { body: 16, display: 48, heading: 28, name: 'compact' },
-    { body: 16, display: 40, heading: 24, name: 'dense' },
+    { body: 52, display: 160, heading: 84, name: 'default' },
+    { body: 44, display: 136, heading: 72, name: 'compact' },
+    { body: 36, display: 112, heading: 60, name: 'dense' },
 ];
 
 const REQUIRED_COLUMNS = ['type', 'phrase', 'meaning', 'sentence'];
@@ -263,25 +307,35 @@ function textPlan(card, scale) {
     const sentence = wrapText(card.sentence, scale.body, CONTENT_WIDTH);
     const phraseWidth = estimateTextWidth(card.phrase, scale.display);
     const phraseFits = phraseWidth <= CONTENT_WIDTH;
+    const meaningBox = rowBox(
+        LAYOUT.meaningBox.rowStart,
+        LAYOUT.meaningBox.rowEnd
+    );
+    const exampleBox = rowBox(
+        LAYOUT.exampleBox.rowStart,
+        LAYOUT.exampleBox.rowEnd
+    );
+    const meaningHeight = meaning.length * lineHeight(scale.body);
+    const sentenceHeight = sentence.length * lineHeight(scale.body);
     const totalHeight =
-        36 +
+        GRID.marginTop +
         scale.heading +
-        12 +
+        GRID.rowGutter +
         scale.display +
-        64 +
-        meaning.length * scale.body * 1.55 +
-        56 +
+        GRID.rowGutter +
+        meaningHeight +
+        GRID.rowGutter +
         scale.heading +
-        24 +
-        sentence.length * scale.body * 1.55 +
-        28;
+        GRID.rowGutter +
+        sentenceHeight +
+        GRID.marginBottom;
 
     return {
         fits:
             phraseFits &&
-            meaning.length <= 5 &&
-            sentence.length <= 4 &&
-            totalHeight <= 484,
+            meaningHeight <= meaningBox.height &&
+            sentenceHeight <= exampleBox.height &&
+            totalHeight <= CARD.height - GRID.marginTop - GRID.marginBottom,
         meaning,
         sentence,
         totalHeight,
@@ -326,17 +380,31 @@ function lineNodes(lines, options) {
 function renderCard(card) {
     const plan = choosePlan(card);
     const { scale } = plan;
-    const meaningStartY = 228;
-    const meaningLineHeight = snap(scale.body * 1.55);
-    const exampleTitleY = Math.max(
-        352,
-        snap(meaningStartY + plan.meaning.length * meaningLineHeight + 52)
+    const centerX = CARD.width / 2;
+    const meaningBox = gridArea(
+        LAYOUT.meaningBox.columnStart,
+        LAYOUT.meaningBox.columnEnd,
+        LAYOUT.meaningBox.rowStart,
+        LAYOUT.meaningBox.rowEnd
     );
-    const sentenceStartY = snap(exampleTitleY + 48);
-    const underlineWidth = Math.min(
-        308,
-        snap(Math.max(176, estimateTextWidth(card.phrase, scale.display) + 16))
+    const exampleBox = gridArea(
+        LAYOUT.exampleBox.columnStart,
+        LAYOUT.exampleBox.columnEnd,
+        LAYOUT.exampleBox.rowStart,
+        LAYOUT.exampleBox.rowEnd
     );
+    const logoBox = gridBox(LAYOUT.logo.columnStart, LAYOUT.logo.columnEnd);
+    const phraseRuleBox = gridBox(
+        LAYOUT.phraseRule.columnStart,
+        LAYOUT.phraseRule.columnEnd
+    );
+    const meaningStartY = meaningBox.y + scale.body;
+    const meaningLineHeight = lineHeight(scale.body);
+    const exampleTitleY =
+        rowCenterY(LAYOUT.exampleTitle.row) + scale.heading / 3;
+    const sentenceStartY = exampleBox.y + scale.body;
+    const underlineWidth = phraseRuleBox.width;
+    const underlineX = phraseRuleBox.x;
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${CARD.width}" height="${CARD.height}" viewBox="0 0 ${CARD.width} ${CARD.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
@@ -370,36 +438,75 @@ text {
     fill: ${STYLE.accent};
 }
 .logo {
-    font-size: 8px;
+    font-size: 28px;
     fill: ${STYLE.mutedInk};
     font-weight: 700;
     letter-spacing: 0;
 }
 </style>
 <rect width="${CARD.width}" height="${CARD.height}" fill="${STYLE.background}"/>
-<text x="204" y="67" class="type" text-anchor="middle">${escapeXml(card.type)}</text>
-<rect x="${(CARD.width - underlineWidth) / 2}" y="168" width="${underlineWidth}" height="22" rx="4" fill="${STYLE.accentSoft}"/>
-<text x="204" y="156" class="phrase" text-anchor="middle">${escapeXml(card.phrase)}</text>
+<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.type)}</text>
+<rect x="${underlineX}" y="${rowLineY(LAYOUT.phraseRule.row)}" width="${underlineWidth}" height="${ROW_HEIGHT}" rx="16" fill="${STYLE.accentSoft}"/>
+<text x="${centerX}" y="${rowLineY(LAYOUT.phrase.row) + scale.display * 0.8}" class="phrase" text-anchor="middle">${escapeXml(card.phrase)}</text>
 ${lineNodes(plan.meaning, {
     className: 'body',
     lineHeight: meaningLineHeight,
-    x: GRID.margin,
+    x: meaningBox.x,
     y: meaningStartY,
 })}
-<text x="204" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
+<text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
 ${lineNodes(plan.sentence, {
     className: 'body',
-    lineHeight: snap(scale.body * 1.55),
-    x: GRID.margin,
+    lineHeight: lineHeight(scale.body),
+    x: exampleBox.x,
     y: sentenceStartY,
 })}
-<text x="300" y="496" class="logo">©2026 ${STYLE.logo}</text>
+<text x="${logoBox.x}" y="${rowLineY(LAYOUT.logo.row) + ROW_HEIGHT}" class="logo">©2026 ${STYLE.logo}</text>
 </svg>
 `;
 }
 
-function snap(value) {
-    return Math.round(value / GRID.row) * GRID.row;
+function lineHeight(fontSize) {
+    return Math.round(fontSize * 1.35);
+}
+
+function gridLineX(column) {
+    return GRID.marginLeft + (column - 1) * (COLUMN_WIDTH + GRID.columnGutter);
+}
+
+function gridBox(columnStart, columnEnd) {
+    const x = gridLineX(columnStart);
+    const endX = gridLineX(columnEnd) + COLUMN_WIDTH;
+
+    return {
+        width: endX - x,
+        x,
+    };
+}
+
+function rowLineY(row) {
+    return GRID.marginTop + (row - 1) * (ROW_HEIGHT + GRID.rowGutter);
+}
+
+function rowCenterY(row) {
+    return rowLineY(row) + ROW_HEIGHT / 2;
+}
+
+function rowBox(rowStart, rowEnd) {
+    const y = rowLineY(rowStart);
+    const endY = rowLineY(rowEnd) + ROW_HEIGHT;
+
+    return {
+        height: endY - y,
+        y,
+    };
+}
+
+function gridArea(columnStart, columnEnd, rowStart, rowEnd) {
+    return {
+        ...gridBox(columnStart, columnEnd),
+        ...rowBox(rowStart, rowEnd),
+    };
 }
 
 function slugify(value, fallback) {
