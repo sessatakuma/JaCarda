@@ -436,10 +436,11 @@ function meaningLines(meaning, scale) {
         .map((item) => item.trim())
         .filter(Boolean);
     const items = rawItems.length > 0 ? rawItems : [meaning];
+    const shouldNumberItems = items.length > 1;
     const lines = [];
 
     for (const [index, item] of items.entries()) {
-        const prefix = `${index + 1}. `;
+        const prefix = shouldNumberItems ? `${index + 1}. ` : '';
         const wrapped = wrapText(item, scale.body, CONTENT_WIDTH - 24);
         for (const [lineIndex, line] of wrapped.entries()) {
             lines.push({

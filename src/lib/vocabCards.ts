@@ -520,10 +520,11 @@ function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
         .split(/\n+|[;|]/)
         .map((item) => item.trim())
         .filter(Boolean);
+    const shouldNumberItems = rawItems.length > 1;
     const lines: Array<MeaningLine> = [];
 
     for (const [index, item] of rawItems.entries()) {
-        const prefix = `${index + 1}. `;
+        const prefix = shouldNumberItems ? `${index + 1}. ` : '';
         const wrapped = wrapText(item, scale.body, contentWidth - 24);
         for (const [lineIndex, line] of wrapped.entries()) {
             lines.push({
