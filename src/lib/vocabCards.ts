@@ -709,6 +709,8 @@ function phraseRubyNode(
 ): string {
     const centerX = options.x + options.width / 2;
     const reading = cardData.reading.trim();
+    const readingY =
+        options.y + Math.round(lineHeight(options.scale.body) * 0.4);
     const phraseY = options.y + options.height;
 
     if (!reading) {
@@ -737,7 +739,7 @@ function phraseRubyNode(
 
         if (segment.rubyText) {
             nodes.unshift(
-                `<text x="${segmentX + width / 2}" y="${options.y}" class="phrase-reading" text-anchor="middle" dominant-baseline="hanging">${escapeXml(segment.rubyText)}</text>`
+                `<text x="${segmentX + width / 2}" y="${readingY}" class="phrase-reading" text-anchor="middle" dominant-baseline="hanging">${escapeXml(segment.rubyText)}</text>`
             );
         }
 
