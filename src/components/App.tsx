@@ -455,23 +455,23 @@ export function App(): JSX.Element {
                 </section>
             </main>
             <Footer />
-            <div className={`sheet-status sheet-status--${sheetStatusState}`}>
-                {sheetStatusState === 'disconnected' ? null : (
-                    <>
-                        <span className='sheet-status-dot' aria-hidden='true' />
-                        <p>{connectionMessage}</p>
-                    </>
-                )}
-                <AppButton
-                    ariaLabel='Sheet settings'
-                    className='sheet-settings-button'
-                    icon={<FileSymlink size={18} aria-hidden='true' />}
-                    variant='ghost'
-                    onClick={() => {
-                        setIsDialogOpen(true);
-                    }}
-                />
-            </div>
+            {sheetUrl ? (
+                <div
+                    className={`sheet-status sheet-status--${sheetStatusState}`}
+                >
+                    <span className='sheet-status-dot' aria-hidden='true' />
+                    <p>{connectionMessage}</p>
+                    <AppButton
+                        ariaLabel='Sheet settings'
+                        className='sheet-settings-button'
+                        icon={<FileSymlink size={18} aria-hidden='true' />}
+                        variant='ghost'
+                        onClick={() => {
+                            setIsDialogOpen(true);
+                        }}
+                    />
+                </div>
+            ) : null}
 
             {isDialogOpen ? (
                 <div className='sheet-dialog-backdrop'>

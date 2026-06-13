@@ -240,12 +240,6 @@ button:disabled {
     background: var(--color-feedback-warning);
 }
 
-.sheet-status--disconnected {
-    grid-template-columns: auto;
-    width: auto;
-    padding: var(--space-2);
-}
-
 .panel-title {
     color: var(--color-accent-green);
     font-size: 1.375rem;
