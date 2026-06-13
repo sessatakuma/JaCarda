@@ -194,6 +194,13 @@ export function App(): JSX.Element {
                         : card
                 )
             );
+            const nextUnusedCount = cards.filter(
+                (card) =>
+                    card.rowNumber !== cardToMark.rowNumber &&
+                    !card.usedAt?.trim()
+            ).length;
+
+            setConnectionMessage(`${nextUnusedCount} unused rows`);
             setIsMarkDialogOpen(false);
             setSelectedIndex(0);
             setUsedMessage(`Marked "${cardToMark.phrase}" as used.`);
