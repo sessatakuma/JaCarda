@@ -35,25 +35,33 @@ const columnWidth =
 const rowHeight = (gridHeight - (grid.rows - 1) * grid.rowGutter) / grid.rows;
 
 const layout = {
-    footer: {
+    exampleBox: {
         columnEnd: 12,
+        columnStart: 2,
+        rowEnd: 15,
+        rowStart: 13,
+    },
+    exampleTitle: {
+        row: 12,
+    },
+    logo: {
+        columnEnd: 12,
+        columnStart: 10,
         row: 16,
-        columnStart: 9,
     },
     meaningBox: {
         columnEnd: 12,
         columnStart: 2,
-        rowEnd: 9,
-        rowStart: 7,
+        rowEnd: 10,
+        rowStart: 8,
     },
     phrase: {
-        row: 4,
+        row: 5,
     },
-    sentenceBox: {
+    phraseRule: {
         columnEnd: 12,
         columnStart: 2,
-        rowEnd: 14,
-        rowStart: 11,
+        row: 6,
     },
     type: {
         row: 2,
@@ -66,11 +74,13 @@ const style = {
     accent: '#6da58e',
     accentSoft: '#dceee8',
     background: '#fbfbfb',
+    displayTypeface:
+        '"Tsunagi Gothic", "TsunagiGothic", "A-OTF Shin Go Pr6N", "Hiragino Sans", "Yu Gothic", sans-serif',
     ink: '#242b36',
     logo: 'Sessatakuma',
+    logoTypeface: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif',
     mutedInk: '#596579',
-    typeface:
-        '"A-OTF Shin Go Pr6N", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif',
+    typeface: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif',
 };
 
 const typeScales = [
@@ -233,49 +243,85 @@ export function renderVocabCard(cardData: VocabCard): string {
         layout.meaningBox.rowStart,
         layout.meaningBox.rowEnd
     );
-    const sentenceBox = gridArea(
-        layout.sentenceBox.columnStart,
-        layout.sentenceBox.columnEnd,
-        layout.sentenceBox.rowStart,
-        layout.sentenceBox.rowEnd
+    const exampleBox = gridArea(
+        layout.exampleBox.columnStart,
+        layout.exampleBox.columnEnd,
+        layout.exampleBox.rowStart,
+        layout.exampleBox.rowEnd
     );
-    const footerBox = gridBox(
-        layout.footer.columnStart,
-        layout.footer.columnEnd
+    const phraseRuleBox = gridBox(
+        layout.phraseRule.columnStart,
+        layout.phraseRule.columnEnd
     );
     const meaningStartY = meaningBox.y + scale.body;
-    const sentenceStartY = sentenceBox.y + scale.body;
+    const meaningLineHeight = lineHeight(scale.body);
+    const exampleTitleY =
+        rowCenterY(layout.exampleTitle.row) + scale.heading / 3;
+    const sentenceStartY = exampleBox.y + scale.body;
+    const phraseBlock = phraseBlockMetrics(scale);
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${card.width}" height="${card.height}" viewBox="0 0 ${card.width} ${card.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
 <title id="title">${escapeXml(cardData.phrase)} vocabulary card</title>
 <desc id="desc">Vocabulary card generated from Google Sheets or CSV.</desc>
 <style>
+@font-face {
+    font-family: 'Tsunagi Gothic';
+    font-weight: 900;
+    src: url('/fonts/TsunagiGothic.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Noto Sans JP';
+    font-weight: 100 900;
+    src: url('/fonts/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+}
 text {
     font-family: ${style.typeface};
-    font-weight: 800;
+    font-weight: 900;
     fill: ${style.ink};
 }
 .type {
+    font-family: ${style.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.heading}px;
     fill: ${style.accent};
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
 }
 .phrase {
+    font-family: ${style.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.display}px;
-    letter-spacing: 0.02em;
+    line-height: 1;
+    color: ${style.ink};
+    letter-spacing: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+.phrase ruby {
+    ruby-position: over;
+}
+.phrase rt {
+    font-family: ${style.displayTypeface};
+    font-size: ${scale.body}px;
+    line-height: 1;
 }
 .heading {
+    font-family: ${style.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.heading}px;
     fill: ${style.mutedInk};
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
 }
 .body {
     font-size: ${scale.body}px;
     fill: ${style.mutedInk};
 }
+.accent {
+    fill: ${style.accent};
+}
 .logo {
-    font-size: 28px;
+    font-family: ${style.logoTypeface};
+    font-size: 32px;
     fill: ${style.mutedInk};
     font-weight: 700;
     letter-spacing: 0;
@@ -283,25 +329,35 @@ text {
 text[data-field] {
     cursor: pointer;
 }
+[data-field] {
+    cursor: pointer;
+}
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
-<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="reading" text-anchor="middle">${escapeXml(cardData.reading)}</text>
-<text x="${centerX}" y="${rowLineY(layout.phrase.row) + scale.display * 0.8}" class="phrase" data-field="phrase" text-anchor="middle">${escapeXml(cardData.phrase)}</text>
+<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="type" text-anchor="middle">${escapeXml(cardData.type)}</text>
+<rect x="${phraseRuleBox.x}" y="${rowLineY(layout.phraseRule.row)}" width="${phraseRuleBox.width}" height="${rowHeight}" rx="16" fill="${style.accentSoft}"/>
+${phraseRubyNode(cardData, {
+    height: phraseBlock.height,
+    width: contentWidth,
+    x: gridBox(2, 12).x,
+    y: rowLineY(layout.phrase.row) + phraseBlock.yOffset,
+})}
 ${lineNodes(plan.meaning, {
     className: 'body',
     field: 'meaning',
-    lineHeight: lineHeight(scale.body),
+    lineHeight: meaningLineHeight,
     x: meaningBox.x,
     y: meaningStartY,
 })}
-${lineNodes(plan.sentence, {
+<text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
+${sentenceLineNodes(plan.sentence, cardData.phrase, {
     className: 'body',
     field: 'sentence',
     lineHeight: lineHeight(scale.body),
-    x: sentenceBox.x,
+    x: exampleBox.x,
     y: sentenceStartY,
 })}
-<text x="${footerBox.x}" y="${rowLineY(layout.footer.row) + rowHeight}" class="logo">©2026 ${style.logo}</text>
+<text x="${card.width - grid.marginRight}" y="${rowLineY(layout.logo.row) + rowHeight}" class="logo" text-anchor="end">©2026 ${style.logo}</text>
 </svg>
 `;
 }
@@ -489,9 +545,9 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         layout.meaningBox.rowStart,
         layout.meaningBox.rowEnd
     );
-    const sentenceBox = rowBox(
-        layout.sentenceBox.rowStart,
-        layout.sentenceBox.rowEnd
+    const exampleBox = rowBox(
+        layout.exampleBox.rowStart,
+        layout.exampleBox.rowEnd
     );
     const meaningHeight = meaning.length * lineHeight(scale.body);
     const sentenceHeight = sentence.length * lineHeight(scale.body);
@@ -500,7 +556,7 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         fits:
             phraseFits &&
             meaningHeight <= meaningBox.height &&
-            sentenceHeight <= sentenceBox.height,
+            sentenceHeight <= exampleBox.height,
         meaning,
         sentence,
     };
@@ -589,8 +645,82 @@ function lineNodes(
         .join('\n');
 }
 
+function sentenceLineNodes(
+    lines: Array<string>,
+    phrase: string,
+    options: {
+        className: string;
+        field?: keyof VocabCard;
+        lineHeight: number;
+        x: number;
+        y: number;
+    }
+): string {
+    return lines
+        .map((line, index) => {
+            const y = options.y + index * options.lineHeight;
+            const dataField =
+                options.field === undefined
+                    ? ''
+                    : ` data-field="${options.field}"`;
+            const highlightIndex = phrase ? line.indexOf(phrase) : -1;
+
+            if (highlightIndex === -1) {
+                return `<text x="${options.x}" y="${y}" class="${options.className}"${dataField}>${escapeXml(line)}</text>`;
+            }
+
+            const before = line.slice(0, highlightIndex);
+            const highlighted = line.slice(
+                highlightIndex,
+                highlightIndex + phrase.length
+            );
+            const after = line.slice(highlightIndex + phrase.length);
+
+            return [
+                `<text x="${options.x}" y="${y}" class="${options.className}"${dataField}>`,
+                `<tspan>${escapeXml(before)}</tspan>`,
+                `<tspan class="accent">${escapeXml(highlighted)}</tspan>`,
+                `<tspan>${escapeXml(after)}</tspan>`,
+                '</text>',
+            ].join('');
+        })
+        .join('\n');
+}
+
 function lineHeight(fontSize: number): number {
     return Math.round(fontSize * 1.35);
+}
+
+function phraseBlockMetrics(scale: (typeof typeScales)[number]) {
+    const readingHeight = Math.round(scale.body * 1.08);
+    const phraseHeight = Math.round(scale.display * 1.02);
+
+    return {
+        height: readingHeight + phraseHeight,
+        yOffset: -readingHeight,
+    };
+}
+
+function phraseRubyNode(
+    cardData: VocabCard,
+    options: {
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    }
+): string {
+    const reading = cardData.reading
+        ? `<rt>${escapeXml(cardData.reading)}</rt>`
+        : '';
+
+    return [
+        `<foreignObject x="${options.x}" y="${options.y}" width="${options.width}" height="${options.height}" data-field="phrase">`,
+        '<div xmlns="http://www.w3.org/1999/xhtml" class="phrase">',
+        `<ruby>${escapeXml(cardData.phrase)}${reading}</ruby>`,
+        '</div>',
+        '</foreignObject>',
+    ].join('');
 }
 
 function gridLineX(column: number): number {
@@ -609,6 +739,10 @@ function gridBox(columnStart: number, columnEnd: number) {
 
 function rowLineY(row: number): number {
     return grid.marginTop + (row - 1) * (rowHeight + grid.rowGutter);
+}
+
+function rowCenterY(row: number): number {
+    return rowLineY(row) + rowHeight / 2;
 }
 
 function rowBox(rowStart: number, rowEnd: number) {

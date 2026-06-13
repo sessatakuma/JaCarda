@@ -66,8 +66,10 @@ const STYLE = {
     mutedInk: '#596579',
     accent: '#6da58e',
     accentSoft: '#dceee8',
-    typeface:
-        '"A-OTF Shin Go Pr6N", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif',
+    displayTypeface:
+        '"Tsunagi Gothic", "TsunagiGothic", "A-OTF Shin Go Pr6N", "Hiragino Sans", "Yu Gothic", sans-serif',
+    logoTypeface: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif',
+    typeface: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif',
     logo: 'Sessatakuma',
 };
 
@@ -530,7 +532,6 @@ function renderCard(card) {
         LAYOUT.exampleBox.rowStart,
         LAYOUT.exampleBox.rowEnd
     );
-    const logoBox = gridBox(LAYOUT.logo.columnStart, LAYOUT.logo.columnEnd);
     const phraseRuleBox = gridBox(
         LAYOUT.phraseRule.columnStart,
         LAYOUT.phraseRule.columnEnd
@@ -548,24 +549,52 @@ function renderCard(card) {
 <title id="title">${escapeXml(card.phrase)} vocabulary card</title>
 <desc id="desc">Vocabulary card generated from CSV row ${card.rowNumber}.</desc>
 <style>
+@font-face {
+    font-family: 'Tsunagi Gothic';
+    font-weight: 900;
+    src: url('/fonts/TsunagiGothic.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Noto Sans JP';
+    font-weight: 100 900;
+    src: url('/fonts/NotoSansJP-VariableFont_wght.ttf') format('truetype');
+}
 text {
     font-family: ${STYLE.typeface};
-    font-weight: 800;
+    font-weight: 900;
     fill: ${STYLE.ink};
 }
 .type {
+    font-family: ${STYLE.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.heading}px;
     fill: ${STYLE.accent};
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
 }
 .phrase {
+    font-family: ${STYLE.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.display}px;
-    letter-spacing: 0.02em;
+    line-height: 1;
+    color: ${STYLE.ink};
+    letter-spacing: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+.phrase ruby {
+    ruby-position: over;
+}
+.phrase rt {
+    font-family: ${STYLE.displayTypeface};
+    font-size: ${scale.body}px;
+    line-height: 1;
 }
 .heading {
+    font-family: ${STYLE.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.heading}px;
     fill: ${STYLE.mutedInk};
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
 }
 .body {
     font-size: ${scale.body}px;
@@ -575,16 +604,22 @@ text {
     fill: ${STYLE.accent};
 }
 .logo {
-    font-size: 28px;
+    font-family: ${STYLE.logoTypeface};
+    font-size: 32px;
     fill: ${STYLE.mutedInk};
     font-weight: 700;
     letter-spacing: 0;
 }
 </style>
 <rect width="${CARD.width}" height="${CARD.height}" fill="${STYLE.background}"/>
-<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.reading)}</text>
+<text x="${centerX}" y="${rowLineY(LAYOUT.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(card.type)}</text>
 <rect x="${underlineX}" y="${rowLineY(LAYOUT.phraseRule.row)}" width="${underlineWidth}" height="${ROW_HEIGHT}" rx="16" fill="${STYLE.accentSoft}"/>
-<text x="${centerX}" y="${rowLineY(LAYOUT.phrase.row) + scale.display * 0.8}" class="phrase" text-anchor="middle">${escapeXml(card.phrase)}</text>
+${phraseRubyNode(card, {
+    height: phraseBlockMetrics(scale).height,
+    width: CONTENT_WIDTH,
+    x: gridBox(2, 12).x,
+    y: rowLineY(LAYOUT.phrase.row) + phraseBlockMetrics(scale).yOffset,
+})}
 ${lineNodes(plan.meaning, {
     className: 'body',
     lineHeight: meaningLineHeight,
@@ -592,19 +627,69 @@ ${lineNodes(plan.meaning, {
     y: meaningStartY,
 })}
 <text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
-${lineNodes(plan.sentence, {
+${sentenceLineNodes(plan.sentence, card.phrase, {
     className: 'body',
     lineHeight: lineHeight(scale.body),
     x: exampleBox.x,
     y: sentenceStartY,
 })}
-<text x="${logoBox.x}" y="${rowLineY(LAYOUT.logo.row) + ROW_HEIGHT}" class="logo">©2026 ${STYLE.logo}</text>
+<text x="${CARD.width - GRID.marginRight}" y="${rowLineY(LAYOUT.logo.row) + ROW_HEIGHT}" class="logo" text-anchor="end">©2026 ${STYLE.logo}</text>
 </svg>
 `;
 }
 
 function lineHeight(fontSize) {
     return Math.round(fontSize * 1.35);
+}
+
+function sentenceLineNodes(lines, phrase, options) {
+    return lines
+        .map((line, index) => {
+            const y = options.y + index * options.lineHeight;
+            const highlightIndex = phrase ? line.indexOf(phrase) : -1;
+
+            if (highlightIndex === -1) {
+                return `<text x="${options.x}" y="${y}" class="${options.className}">${escapeXml(line)}</text>`;
+            }
+
+            const before = line.slice(0, highlightIndex);
+            const highlighted = line.slice(
+                highlightIndex,
+                highlightIndex + phrase.length
+            );
+            const after = line.slice(highlightIndex + phrase.length);
+
+            return [
+                `<text x="${options.x}" y="${y}" class="${options.className}">`,
+                `<tspan>${escapeXml(before)}</tspan>`,
+                `<tspan class="accent">${escapeXml(highlighted)}</tspan>`,
+                `<tspan>${escapeXml(after)}</tspan>`,
+                '</text>',
+            ].join('');
+        })
+        .join('\n');
+}
+
+function phraseBlockMetrics(scale) {
+    const readingHeight = Math.round(scale.body * 1.08);
+    const phraseHeight = Math.round(scale.display * 1.02);
+
+    return {
+        height: readingHeight + phraseHeight,
+        yOffset: -readingHeight,
+    };
+}
+
+function phraseRubyNode(card, options) {
+    const reading = card.reading ? `<rt>${escapeXml(card.reading)}</rt>` : '';
+
+    return [
+        `<foreignObject x="${options.x}" y="${options.y}" width="${options.width}" height="${options.height}">`,
+        '<div xmlns="http://www.w3.org/1999/xhtml" class="phrase">',
+        `<ruby>${escapeXml(card.phrase)}${reading}</ruby>`,
+        '</div>',
+        '</foreignObject>',
+    ].join('');
 }
 
 function gridLineX(column) {

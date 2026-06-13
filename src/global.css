@@ -313,7 +313,7 @@ button:disabled {
     height: 100%;
 }
 
-.svg-preview text[data-field]:hover {
+.svg-preview [data-field]:hover {
     filter: drop-shadow(0 0 0.08em var(--color-accent-green));
 }
 

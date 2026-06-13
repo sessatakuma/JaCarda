@@ -123,7 +123,7 @@ export function App(): JSX.Element {
 
     function editSvgText(event: MouseEvent<HTMLDivElement>): void {
         const target = event.target as Element;
-        const textNode = target.closest('text[data-field]');
+        const textNode = target.closest('[data-field]');
         const field = textNode?.getAttribute('data-field') as
             | keyof VocabCard
             | null;
