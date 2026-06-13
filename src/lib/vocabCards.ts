@@ -35,33 +35,25 @@ const columnWidth =
 const rowHeight = (gridHeight - (grid.rows - 1) * grid.rowGutter) / grid.rows;
 
 const layout = {
-    exampleBox: {
+    footer: {
         columnEnd: 12,
-        columnStart: 2,
-        rowEnd: 15,
-        rowStart: 13,
-    },
-    exampleTitle: {
-        row: 12,
-    },
-    logo: {
-        columnEnd: 12,
-        columnStart: 10,
         row: 16,
+        columnStart: 9,
     },
     meaningBox: {
         columnEnd: 12,
         columnStart: 2,
-        rowEnd: 10,
-        rowStart: 8,
+        rowEnd: 9,
+        rowStart: 7,
     },
     phrase: {
-        row: 5,
+        row: 4,
     },
-    phraseRule: {
+    sentenceBox: {
         columnEnd: 12,
         columnStart: 2,
-        row: 6,
+        rowEnd: 14,
+        rowStart: 11,
     },
     type: {
         row: 2,
@@ -241,21 +233,18 @@ export function renderVocabCard(cardData: VocabCard): string {
         layout.meaningBox.rowStart,
         layout.meaningBox.rowEnd
     );
-    const exampleBox = gridArea(
-        layout.exampleBox.columnStart,
-        layout.exampleBox.columnEnd,
-        layout.exampleBox.rowStart,
-        layout.exampleBox.rowEnd
+    const sentenceBox = gridArea(
+        layout.sentenceBox.columnStart,
+        layout.sentenceBox.columnEnd,
+        layout.sentenceBox.rowStart,
+        layout.sentenceBox.rowEnd
     );
-    const logoBox = gridBox(layout.logo.columnStart, layout.logo.columnEnd);
-    const phraseRuleBox = gridBox(
-        layout.phraseRule.columnStart,
-        layout.phraseRule.columnEnd
+    const footerBox = gridBox(
+        layout.footer.columnStart,
+        layout.footer.columnEnd
     );
     const meaningStartY = meaningBox.y + scale.body;
-    const exampleTitleY =
-        rowCenterY(layout.exampleTitle.row) + scale.heading / 3;
-    const sentenceStartY = exampleBox.y + scale.body;
+    const sentenceStartY = sentenceBox.y + scale.body;
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${card.width}" height="${card.height}" viewBox="0 0 ${card.width} ${card.height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
@@ -297,7 +286,6 @@ text[data-field] {
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
 <text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="reading" text-anchor="middle">${escapeXml(cardData.reading)}</text>
-<rect x="${phraseRuleBox.x}" y="${rowLineY(layout.phraseRule.row)}" width="${phraseRuleBox.width}" height="${rowHeight}" rx="16" fill="${style.accentSoft}"/>
 <text x="${centerX}" y="${rowLineY(layout.phrase.row) + scale.display * 0.8}" class="phrase" data-field="phrase" text-anchor="middle">${escapeXml(cardData.phrase)}</text>
 ${lineNodes(plan.meaning, {
     className: 'body',
@@ -306,15 +294,14 @@ ${lineNodes(plan.meaning, {
     x: meaningBox.x,
     y: meaningStartY,
 })}
-<text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
 ${lineNodes(plan.sentence, {
     className: 'body',
     field: 'sentence',
     lineHeight: lineHeight(scale.body),
-    x: exampleBox.x,
+    x: sentenceBox.x,
     y: sentenceStartY,
 })}
-<text x="${logoBox.x}" y="${rowLineY(layout.logo.row) + rowHeight}" class="logo">©2026 ${style.logo}</text>
+<text x="${footerBox.x}" y="${rowLineY(layout.footer.row) + rowHeight}" class="logo">©2026 ${style.logo}</text>
 </svg>
 `;
 }
@@ -477,10 +464,9 @@ function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
         .split(/\n+|[;|]/)
         .map((item) => item.trim())
         .filter(Boolean);
-    const items = rawItems.length > 0 ? rawItems : [meaning];
     const lines: Array<MeaningLine> = [];
 
-    for (const [index, item] of items.entries()) {
+    for (const [index, item] of rawItems.entries()) {
         const prefix = `${index + 1}. `;
         const wrapped = wrapText(item, scale.body, contentWidth - 24);
         for (const [lineIndex, line] of wrapped.entries()) {
@@ -503,9 +489,9 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         layout.meaningBox.rowStart,
         layout.meaningBox.rowEnd
     );
-    const exampleBox = rowBox(
-        layout.exampleBox.rowStart,
-        layout.exampleBox.rowEnd
+    const sentenceBox = rowBox(
+        layout.sentenceBox.rowStart,
+        layout.sentenceBox.rowEnd
     );
     const meaningHeight = meaning.length * lineHeight(scale.body);
     const sentenceHeight = sentence.length * lineHeight(scale.body);
@@ -514,7 +500,7 @@ function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
         fits:
             phraseFits &&
             meaningHeight <= meaningBox.height &&
-            sentenceHeight <= exampleBox.height,
+            sentenceHeight <= sentenceBox.height,
         meaning,
         sentence,
     };
@@ -623,10 +609,6 @@ function gridBox(columnStart: number, columnEnd: number) {
 
 function rowLineY(row: number): number {
     return grid.marginTop + (row - 1) * (rowHeight + grid.rowGutter);
-}
-
-function rowCenterY(row: number): number {
-    return rowLineY(row) + rowHeight / 2;
 }
 
 function rowBox(rowStart: number, rowEnd: number) {
