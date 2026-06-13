@@ -305,10 +305,6 @@ button:disabled {
     height: 100%;
 }
 
-.svg-preview [data-field]:hover {
-    filter: drop-shadow(0 0 0.08em var(--color-accent-green));
-}
-
 .preview-download {
     justify-self: center;
     margin-bottom: var(--space-3);

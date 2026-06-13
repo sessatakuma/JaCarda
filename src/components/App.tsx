@@ -1,11 +1,5 @@
 /* eslint-disable */
-import {
-    useEffect,
-    useState,
-    type JSX,
-    type MouseEvent,
-    type ReactNode,
-} from 'react';
+import { useEffect, useState, type JSX, type ReactNode } from 'react';
 import {
     CircleHelp,
     CloudUpload,
@@ -134,34 +128,6 @@ export function App(): JSX.Element {
                     : card
             )
         );
-    }
-
-    function editSvgText(event: MouseEvent<HTMLDivElement>): void {
-        const target = event.target as Element;
-        const textNode = target.closest('[data-field]');
-        const field = textNode?.getAttribute('data-field') as
-            | keyof VocabCard
-            | null;
-
-        if (!field) {
-            return;
-        }
-
-        const nextValue = window.prompt(
-            t('prompts.editField', { field }),
-            String(selectedCard[field] ?? '')
-        );
-
-        if (nextValue === null) {
-            return;
-        }
-
-        if (field === 'phrase') {
-            updatePhraseWithReading(nextValue);
-            return;
-        }
-
-        updateSelectedCard(field, nextValue);
     }
 
     function updatePhraseWithReading(value: string): void {
@@ -462,7 +428,6 @@ export function App(): JSX.Element {
                             <div
                                 className='svg-preview'
                                 dangerouslySetInnerHTML={{ __html: previewSvg }}
-                                onDoubleClick={editSvgText}
                             />
                             <AppButton
                                 className='preview-download'

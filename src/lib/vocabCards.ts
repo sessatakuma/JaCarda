@@ -326,12 +326,6 @@ text {
     font-weight: 700;
     letter-spacing: 0;
 }
-text[data-field] {
-    cursor: pointer;
-}
-[data-field] {
-    cursor: pointer;
-}
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
 <text x="${typeBox.centerX}" y="${typeBox.centerY}" class="type" data-field="type" text-anchor="middle" dominant-baseline="middle">${escapeXml(cardData.type)}</text>
