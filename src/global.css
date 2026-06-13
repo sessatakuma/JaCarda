@@ -195,6 +195,12 @@ button:disabled {
     padding: var(--space-4);
 }
 
+.edit-panel .button {
+    align-self: end;
+    margin-top: auto;
+    margin-bottom: var(--space-3);
+}
+
 .row-panel {
     grid-template-rows: auto minmax(0, 1fr);
 }
