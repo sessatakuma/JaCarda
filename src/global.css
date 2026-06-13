@@ -211,6 +211,11 @@ button:disabled {
     font-size: 0.875rem;
 }
 
+.sheet-status p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 .sheet-status-dot {
     width: var(--space-3);
     height: var(--space-3);
@@ -262,6 +267,12 @@ button:disabled {
     text-align: left;
     background: transparent;
     border-radius: var(--radius-md);
+}
+
+.row-card strong,
+.row-card small {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .row-card span {
@@ -613,7 +624,11 @@ button:disabled {
 
     .row-panel,
     .preview-panel {
-        min-height: calc(var(--space-7) * 8);
+        height: calc(var(--space-7) * 8);
+    }
+
+    .edit-panel {
+        overflow: visible;
     }
 }
 
@@ -628,6 +643,15 @@ button:disabled {
 
     .studio-shell {
         padding: var(--space-7) var(--space-4);
+    }
+
+    .studio-grid {
+        gap: var(--space-4);
+    }
+
+    .row-panel,
+    .preview-panel {
+        height: calc(var(--space-7) * 7);
     }
 
     .sheet-dialog-actions {
