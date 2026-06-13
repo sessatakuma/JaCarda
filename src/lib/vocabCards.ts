@@ -2,8 +2,10 @@
 export type VocabCard = {
     meaning: string;
     phrase: string;
+    rowNumber: number;
     sentence: string;
     type: string;
+    usedAt?: string;
 };
 
 export const sampleCsv = `type,phrase,meaning,sentence
@@ -84,6 +86,8 @@ const typeScales = [
     { body: 36, display: 112, heading: 60, name: 'dense' },
 ];
 
+type CsvField = Exclude<keyof VocabCard, 'rowNumber'>;
+
 const columnAliases = {
     meaning: [
         'meaning',
@@ -96,11 +100,10 @@ const columnAliases = {
     phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
     sentence: ['sentence', 'example', 'examples', '例句', '例文'],
     type: ['type', 'category', 'reading', '分類', '類型'],
-} satisfies Record<keyof VocabCard, Array<string>>;
+    usedAt: ['usedAt', 'used_at', 'used date', 'used up date', 'generatedAt'],
+} satisfies Record<CsvField, Array<string>>;
 
 const requiredColumns = ['type', 'phrase', 'meaning', 'sentence'] as const;
-
-type VocabColumn = (typeof requiredColumns)[number];
 
 type MeaningLine = {
     prefix: string;
@@ -114,25 +117,44 @@ export function parseCsvCards(content: string): Array<VocabCard> {
         throw new Error('Expected a header row and at least one card row.');
     }
 
-    const headers = rows[0].map(normalizeHeader);
+    const headerIndex = findHeaderRowIndex(rows);
+    const headers = rows[headerIndex].map(normalizeHeader);
     const columns = Object.fromEntries(
         Object.entries(columnAliases).map(([key, aliases]) => [
             key,
             findColumn(headers, aliases),
         ])
-    ) as Record<VocabColumn, number>;
+    ) as Record<CsvField, number>;
     const missing = requiredColumns.filter((key) => columns[key] === -1);
 
     if (missing.length > 0) {
         throw new Error(`Missing required column(s): ${missing.join(', ')}`);
     }
 
-    return rows.slice(1).map((row) => ({
+    return rows.slice(headerIndex + 1).map((row, index) => ({
         meaning: getCell(row, columns.meaning),
         phrase: getCell(row, columns.phrase),
+        rowNumber: headerIndex + index + 2,
         sentence: getCell(row, columns.sentence),
         type: getCell(row, columns.type),
+        usedAt: getCell(row, columns.usedAt) || undefined,
     }));
+}
+
+function findHeaderRowIndex(rows: Array<Array<string>>): number {
+    const index = rows.findIndex((row) => {
+        const headers = row.map(normalizeHeader);
+
+        return requiredColumns.every((key) =>
+            columnAliases[key].some((alias) =>
+                headers.some(
+                    (header) => header.toLowerCase() === alias.toLowerCase()
+                )
+            )
+        );
+    });
+
+    return index === -1 ? 0 : index;
 }
 
 export async function fetchSheetCards(

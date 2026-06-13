@@ -91,6 +91,7 @@ const COLUMN_ALIASES = {
     phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
     sentence: ['sentence', 'example', 'examples', '例句', '例文'],
     type: ['type', 'category', 'reading', '分類', '類型'],
+    usedAt: ['usedAt', 'used_at', 'used date', 'used up date', 'generatedAt'],
 };
 
 function usage() {
@@ -256,7 +257,8 @@ function recordsFromCsv(rows) {
         );
     }
 
-    const headers = rows[0].map(normalizeHeader);
+    const headerIndex = findHeaderRowIndex(rows);
+    const headers = rows[headerIndex].map(normalizeHeader);
     const columns = Object.fromEntries(
         Object.entries(COLUMN_ALIASES).map(([key, aliases]) => [
             key,
@@ -271,13 +273,33 @@ function recordsFromCsv(rows) {
         );
     }
 
-    return rows.slice(1).map((row, index) => ({
-        meaning: getCell(row, columns.meaning),
-        phrase: getCell(row, columns.phrase),
-        sentence: getCell(row, columns.sentence),
-        type: getCell(row, columns.type),
-        rowNumber: index + 2,
-    }));
+    return rows
+        .slice(headerIndex + 1)
+        .map((row, index) => ({
+            meaning: getCell(row, columns.meaning),
+            phrase: getCell(row, columns.phrase),
+            sentence: getCell(row, columns.sentence),
+            type: getCell(row, columns.type),
+            usedAt: getCell(row, columns.usedAt),
+            rowNumber: headerIndex + index + 2,
+        }))
+        .filter((record) => !record.usedAt);
+}
+
+function findHeaderRowIndex(rows) {
+    const index = rows.findIndex((row) => {
+        const headers = row.map(normalizeHeader);
+
+        return REQUIRED_COLUMNS.every((key) =>
+            COLUMN_ALIASES[key].some((alias) =>
+                headers.some(
+                    (header) => header.toLowerCase() === alias.toLowerCase()
+                )
+            )
+        );
+    });
+
+    return index === -1 ? 0 : index;
 }
 
 function getCell(row, index) {

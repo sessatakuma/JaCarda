@@ -20,6 +20,7 @@ import {
 
 const defaultSheetUrl =
     'https://docs.google.com/spreadsheets/d/17l4NXhq_qJJvo8UMAdxNhhjkgfX9HlI0rRopcgdK_cQ/edit?gid=0#gid=0';
+const webhookStorageKey = 'jacarda-sheet-webhook-url';
 const sampleCards = parseCsvCards(sampleCsv);
 
 type ConnectionState = 'error' | 'loading' | 'ready';
@@ -29,14 +30,24 @@ export function App(): JSX.Element {
     const [draftSheetUrl, setDraftSheetUrl] = useState(defaultSheetUrl);
     const [cards, setCards] = useState<Array<VocabCard>>(sampleCards);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [webhookUrl, setWebhookUrl] = useState(
+        () => window.localStorage.getItem(webhookStorageKey) ?? ''
+    );
+    const [draftWebhookUrl, setDraftWebhookUrl] = useState(webhookUrl);
     const [connectionState, setConnectionState] =
         useState<ConnectionState>('loading');
     const [connectionMessage, setConnectionMessage] = useState(
         'Connecting to the default Sheet...'
     );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [usedMessage, setUsedMessage] = useState('');
 
-    const selectedCard = cards[selectedIndex] ?? sampleCards[0];
+    const unusedCards = cards.filter((card) => !card.usedAt?.trim());
+    const selectedCard =
+        unusedCards[selectedIndex] ??
+        unusedCards[0] ??
+        cards[0] ??
+        sampleCards[0];
     const previewSvg = renderVocabCard(selectedCard);
     const csvUrl = safeCsvUrl(sheetUrl);
 
@@ -54,8 +65,12 @@ export function App(): JSX.Element {
             setSelectedIndex(0);
             setSheetUrl(nextSheetUrl);
             setDraftSheetUrl(nextSheetUrl);
+            window.localStorage.setItem(webhookStorageKey, draftWebhookUrl);
+            setWebhookUrl(draftWebhookUrl);
             setConnectionState('ready');
-            setConnectionMessage(`Connected ${nextCards.length} row(s).`);
+            setConnectionMessage(
+                `Connected ${nextCards.length} row(s), ${nextCards.filter((card) => !card.usedAt?.trim()).length} unused.`
+            );
             setIsDialogOpen(false);
         } catch (error) {
             setConnectionState('error');
@@ -69,8 +84,8 @@ export function App(): JSX.Element {
 
     function updateSelectedCard(field: keyof VocabCard, value: string): void {
         setCards((currentCards) =>
-            currentCards.map((card, index) =>
-                index === selectedIndex
+            currentCards.map((card) =>
+                card.rowNumber === selectedCard.rowNumber
                     ? {
                           ...card,
                           [field]: value,
@@ -91,13 +106,68 @@ export function App(): JSX.Element {
             return;
         }
 
-        const nextValue = window.prompt(`Edit ${field}`, selectedCard[field]);
+        const nextValue = window.prompt(
+            `Edit ${field}`,
+            String(selectedCard[field] ?? '')
+        );
 
         if (nextValue === null) {
             return;
         }
 
         updateSelectedCard(field, nextValue);
+    }
+
+    async function confirmGeneratedAndMarkUsed(): Promise<void> {
+        const usedAt = new Date().toISOString();
+
+        if (!webhookUrl.trim()) {
+            setUsedMessage(
+                'Add an Apps Script webhook in Connect Google Sheet before writing used dates.'
+            );
+            return;
+        }
+
+        setUsedMessage('Writing used date back to Google Sheets...');
+
+        try {
+            const response = await fetch(webhookUrl.trim(), {
+                body: JSON.stringify({
+                    phrase: selectedCard.phrase,
+                    rowNumber: selectedCard.rowNumber,
+                    usedAt,
+                }),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    `Webhook returned ${response.status} ${response.statusText}`
+                );
+            }
+
+            setCards((currentCards) =>
+                currentCards.map((card) =>
+                    card.rowNumber === selectedCard.rowNumber
+                        ? {
+                              ...card,
+                              usedAt,
+                          }
+                        : card
+                )
+            );
+            setSelectedIndex(0);
+            setUsedMessage(`Marked row ${selectedCard.rowNumber} as used.`);
+        } catch (error) {
+            setUsedMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not write used date back to Google Sheets.'
+            );
+        }
     }
 
     function downloadCurrent(): void {
@@ -161,8 +231,12 @@ export function App(): JSX.Element {
                                 />
                                 <p>{connectionMessage}</p>
                             </div>
+                            <p className='unused-count'>
+                                Showing {unusedCards.length} unused of{' '}
+                                {cards.length} rows.
+                            </p>
                             <div className='row-list'>
-                                {cards.map((card, index) => (
+                                {unusedCards.map((card, index) => (
                                     <button
                                         className={
                                             index === selectedIndex
@@ -186,6 +260,75 @@ export function App(): JSX.Element {
                                 ))}
                             </div>
                         </aside>
+
+                        <section className='edit-panel' aria-label='Text edit'>
+                            <div className='edit-panel-header'>
+                                <p className='studio-eyebrow'>Text edit</p>
+                                <p>Sheet row {selectedCard.rowNumber}</p>
+                            </div>
+                            <label className='edit-field'>
+                                <span>Type / reading</span>
+                                <input
+                                    value={selectedCard.type}
+                                    onChange={(event) => {
+                                        updateSelectedCard(
+                                            'type',
+                                            event.target.value
+                                        );
+                                    }}
+                                />
+                            </label>
+                            <label className='edit-field'>
+                                <span>Phrase</span>
+                                <input
+                                    value={selectedCard.phrase}
+                                    onChange={(event) => {
+                                        updateSelectedCard(
+                                            'phrase',
+                                            event.target.value
+                                        );
+                                    }}
+                                />
+                            </label>
+                            <label className='edit-field'>
+                                <span>Meaning</span>
+                                <textarea
+                                    rows={5}
+                                    value={selectedCard.meaning}
+                                    onChange={(event) => {
+                                        updateSelectedCard(
+                                            'meaning',
+                                            event.target.value
+                                        );
+                                    }}
+                                />
+                            </label>
+                            <label className='edit-field'>
+                                <span>Sentence</span>
+                                <textarea
+                                    rows={4}
+                                    value={selectedCard.sentence}
+                                    onChange={(event) => {
+                                        updateSelectedCard(
+                                            'sentence',
+                                            event.target.value
+                                        );
+                                    }}
+                                />
+                            </label>
+                            <button
+                                className='button button--ghost'
+                                type='button'
+                                onClick={() => {
+                                    void confirmGeneratedAndMarkUsed();
+                                }}
+                            >
+                                Confirm generated & mark used
+                            </button>
+                            {usedMessage ? (
+                                <p className='used-message'>{usedMessage}</p>
+                            ) : null}
+                        </section>
 
                         <section
                             className='preview-panel'
@@ -232,6 +375,16 @@ export function App(): JSX.Element {
                                     }}
                                 />
                             </label>
+                            <label className='sheet-dialog-field'>
+                                <span>Apps Script write webhook URL</span>
+                                <input
+                                    placeholder='https://script.google.com/macros/s/.../exec'
+                                    value={draftWebhookUrl}
+                                    onChange={(event) => {
+                                        setDraftWebhookUrl(event.target.value);
+                                    }}
+                                />
+                            </label>
                             <div className='sheet-dialog-actions'>
                                 <button
                                     className='button button--ghost'
@@ -263,7 +416,7 @@ export function App(): JSX.Element {
 function Nav(): JSX.Element {
     return (
         <header className='nav'>
-            <div className='nav-brand' aria-label='AkuMa'>
+            <div className='nav-brand' aria-label='JaCarda'>
                 <a className='nav-title' href='#main-content'>
                     <img
                         className='logo'
@@ -275,7 +428,7 @@ function Nav(): JSX.Element {
                         alt=''
                         aria-hidden='true'
                     />
-                    <span className='title'>AkuMa</span>
+                    <span className='title'>JaCarda</span>
                 </a>
             </div>
             <a
