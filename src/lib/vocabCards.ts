@@ -98,6 +98,10 @@ const typeScales = [
     { body: 48, display: 180, heading: 96, logo: 24, name: 'default' },
     { body: 29.33, display: 117.33, heading: 58.67, logo: 16, name: 'compact' },
     { body: 26.67, display: 106.67, heading: 53.33, logo: 16, name: 'dense' },
+    { body: 24, display: 80, heading: 48, logo: 16, name: 'narrow' },
+    { body: 20, display: 64, heading: 40, logo: 16, name: 'tight' },
+    { body: 16, display: 48, heading: 32, logo: 16, name: 'small' },
+    { body: 16, display: 40, heading: 32, logo: 16, name: 'tiny' },
 ];
 
 type CsvField = Exclude<keyof VocabCard, 'rowNumber'>;
@@ -511,6 +515,33 @@ function wrapText(
     return lines.length > 0 ? lines : [''];
 }
 
+function wrapDisplayPhrase(
+    text: string,
+    fontSize: number,
+    maxWidth: number
+): Array<string> {
+    const lines: Array<string> = [];
+    let line = '';
+
+    for (const char of [...text.trim()]) {
+        const candidate = `${line}${char}`;
+
+        if (line && estimateTextWidth(candidate, fontSize) > maxWidth) {
+            lines.push(line);
+            line = char.trimStart();
+            continue;
+        }
+
+        line = candidate;
+    }
+
+    if (line) {
+        lines.push(line);
+    }
+
+    return lines.length > 0 ? lines : [''];
+}
+
 function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
     const rawItems = meaning
         .replaceAll('\\n', '\n')
@@ -542,8 +573,16 @@ function stripMeaningListMarker(value: string): string {
 function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
     const meaning = meaningLines(cardData.meaning, scale);
     const sentence = wrapText(cardData.sentence, scale.body, contentWidth);
-    const phraseWidth = estimateTextWidth(cardData.phrase, scale.display);
-    const phraseFits = phraseWidth <= guideBox(layout.phrase).width;
+    const phraseBox = guideBox(layout.phrase);
+    const phraseLines = cardData.reading.trim()
+        ? [cardData.phrase]
+        : wrapDisplayPhrase(cardData.phrase, scale.display, phraseBox.width);
+    const phraseFits =
+        phraseLines.every(
+            (line) => estimateTextWidth(line, scale.display) <= phraseBox.width
+        ) &&
+        phraseLines.length * displayLineHeight(scale.display) <=
+            phraseBox.height;
     const meaningBox = guideBox(layout.meaningBox);
     const sentenceBox = guideBox(layout.sentenceBox);
     const meaningHeight = meaning.length * lineHeight(scale.body);
@@ -688,6 +727,10 @@ function lineHeight(fontSize: number): number {
     return Math.round(fontSize * 1.35);
 }
 
+function displayLineHeight(fontSize: number): number {
+    return Math.round(fontSize * 1.08);
+}
+
 function phraseBlockMetrics(scale: (typeof typeScales)[number]) {
     const readingHeight = Math.round(scale.body * 1.35);
     const phraseHeight = Math.round(scale.display * 1.02);
@@ -714,13 +757,29 @@ function phraseRubyNode(
     const phraseY = options.y + options.height;
 
     if (!reading) {
-        return `<text x="${centerX}" y="${options.y + options.height / 2}" class="phrase" data-field="phrase" text-anchor="middle" dominant-baseline="middle">${escapeXml(cardData.phrase)}</text>`;
+        return plainPhraseNodes(cardData.phrase, {
+            centerX,
+            className: 'phrase',
+            dataField: ' data-field="phrase"',
+            height: options.height,
+            scale: options.scale,
+            width: options.width,
+            y: options.y,
+        });
     }
 
     const segments = phraseSegments(cardData.phrase, reading);
 
     if (!segments.some((segment) => segment.rubyText)) {
-        return `<text x="${centerX}" y="${options.y + options.height / 2}" class="phrase" data-field="phrase" text-anchor="middle" dominant-baseline="middle">${escapeXml(cardData.phrase)}</text>`;
+        return plainPhraseNodes(cardData.phrase, {
+            centerX,
+            className: 'phrase',
+            dataField: ' data-field="phrase"',
+            height: options.height,
+            scale: options.scale,
+            width: options.width,
+            y: options.y,
+        });
     }
 
     const segmentWidths = segments.map((segment) =>
@@ -748,6 +807,35 @@ function phraseRubyNode(
     });
 
     return ['<g data-field="phrase">', ...segmentNodes, '</g>'].join('');
+}
+
+function plainPhraseNodes(
+    phrase: string,
+    options: {
+        centerX: number;
+        className: string;
+        dataField: string;
+        height: number;
+        scale: (typeof typeScales)[number];
+        width: number;
+        y: number;
+    }
+): string {
+    const lines = wrapDisplayPhrase(
+        phrase,
+        options.scale.display,
+        options.width
+    );
+    const lineGap = displayLineHeight(options.scale.display);
+    const centerY = options.y + options.height / 2;
+    const firstY = centerY - ((lines.length - 1) * lineGap) / 2;
+
+    return lines
+        .map(
+            (line, index) =>
+                `<text x="${options.centerX}" y="${firstY + index * lineGap}" class="${options.className}"${options.dataField} text-anchor="middle" dominant-baseline="middle">${escapeXml(line)}</text>`
+        )
+        .join('');
 }
 
 function phraseSegments(
