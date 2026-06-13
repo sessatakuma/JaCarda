@@ -51,7 +51,7 @@ const layout = {
         xEnd: 11,
         xStart: 0.5,
         yEnd: 10,
-        yStart: 6.5,
+        yStart: 7,
     },
     phrase: {
         xEnd: 11.5,
@@ -62,7 +62,7 @@ const layout = {
     phraseRule: {
         xEnd: 10.5,
         xStart: 1,
-        yEnd: 5.75,
+        yEnd: 6,
         yStart: 5,
     },
     sentenceBox: {
