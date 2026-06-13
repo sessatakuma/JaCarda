@@ -85,10 +85,17 @@ const typeScales = [
 ];
 
 const columnAliases = {
-    meaning: ['meaning', 'meanings', 'definition', 'definitions', '意思'],
-    phrase: ['phrase', 'word', 'vocab', '語彙', '詞'],
-    sentence: ['sentence', 'example', '例句', '例文'],
-    type: ['type', 'category', '分類', '類型'],
+    meaning: [
+        'meaning',
+        'meanings',
+        'definition',
+        'definitions',
+        'explanation',
+        '意思',
+    ],
+    phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
+    sentence: ['sentence', 'example', 'examples', '例句', '例文'],
+    type: ['type', 'category', 'reading', '分類', '類型'],
 } satisfies Record<keyof VocabCard, Array<string>>;
 
 const requiredColumns = ['type', 'phrase', 'meaning', 'sentence'] as const;
@@ -238,13 +245,17 @@ text {
     font-weight: 700;
     letter-spacing: 0;
 }
+text[data-field] {
+    cursor: pointer;
+}
 </style>
 <rect width="${card.width}" height="${card.height}" fill="${style.background}"/>
-<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" text-anchor="middle">${escapeXml(cardData.type)}</text>
+<text x="${centerX}" y="${rowLineY(layout.type.row) + scale.heading}" class="type" data-field="type" text-anchor="middle">${escapeXml(cardData.type)}</text>
 <rect x="${phraseRuleBox.x}" y="${rowLineY(layout.phraseRule.row)}" width="${phraseRuleBox.width}" height="${rowHeight}" rx="16" fill="${style.accentSoft}"/>
-<text x="${centerX}" y="${rowLineY(layout.phrase.row) + scale.display * 0.8}" class="phrase" text-anchor="middle">${escapeXml(cardData.phrase)}</text>
+<text x="${centerX}" y="${rowLineY(layout.phrase.row) + scale.display * 0.8}" class="phrase" data-field="phrase" text-anchor="middle">${escapeXml(cardData.phrase)}</text>
 ${lineNodes(plan.meaning, {
     className: 'body',
+    field: 'meaning',
     lineHeight: lineHeight(scale.body),
     x: meaningBox.x,
     y: meaningStartY,
@@ -252,6 +263,7 @@ ${lineNodes(plan.meaning, {
 <text x="${centerX}" y="${exampleTitleY}" class="heading" text-anchor="middle">例句</text>
 ${lineNodes(plan.sentence, {
     className: 'body',
+    field: 'sentence',
     lineHeight: lineHeight(scale.body),
     x: exampleBox.x,
     y: sentenceStartY,
@@ -483,6 +495,7 @@ function lineNodes(
     lines: Array<string> | Array<MeaningLine>,
     options: {
         className: string;
+        field?: keyof VocabCard;
         lineHeight: number;
         x: number;
         y: number;
@@ -495,13 +508,17 @@ function lineNodes(
                 typeof line === 'object' && 'prefix' in line ? line.prefix : '';
             const text =
                 typeof line === 'object' && 'text' in line ? line.text : line;
+            const dataField =
+                options.field === undefined
+                    ? ''
+                    : ` data-field="${options.field}"`;
 
             if (!prefix) {
-                return `<text x="${options.x}" y="${y}" class="${options.className}">${escapeXml(text)}</text>`;
+                return `<text x="${options.x}" y="${y}" class="${options.className}"${dataField}>${escapeXml(text)}</text>`;
             }
 
             return [
-                `<text x="${options.x}" y="${y}" class="${options.className}">`,
+                `<text x="${options.x}" y="${y}" class="${options.className}"${dataField}>`,
                 `<tspan>${escapeXml(prefix)}</tspan>`,
                 `<tspan>${escapeXml(text)}</tspan>`,
                 '</text>',

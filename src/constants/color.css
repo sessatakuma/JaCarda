@@ -25,4 +25,17 @@
     --clr-warning: #e3a23b;
     --shadow-surface: 0 24px 48px rgba(36, 43, 54, 0.08);
     --shadow-card: 0 32px 80px rgba(36, 43, 54, 0.14);
+
+    --color-bg-primary: #e9e5e4;
+    --color-bg-secondary: #ffffff;
+    --color-bg-secondary-hover: #fafaf9;
+    --color-text-primary: #242b36;
+    --color-text-secondary: #596579;
+    --color-text-inverted: #ffffff;
+    --color-accent-green: #6da58e;
+    --color-accent-green-hover: #4e7e69;
+    --color-accent-green-light: #dceee8;
+    --color-border: #cfcfcf;
+    --color-feedback-success: var(--color-accent-green);
+    --color-feedback-warning: #d25a3c;
 }

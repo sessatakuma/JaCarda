@@ -80,10 +80,17 @@ const TYPE_SCALES = [
 const REQUIRED_COLUMNS = ['type', 'phrase', 'meaning', 'sentence'];
 
 const COLUMN_ALIASES = {
-    meaning: ['meaning', 'meanings', 'definition', 'definitions', '意思'],
-    phrase: ['phrase', 'word', 'vocab', '語彙', '詞'],
-    sentence: ['sentence', 'example', '例句', '例文'],
-    type: ['type', 'category', '分類', '類型'],
+    meaning: [
+        'meaning',
+        'meanings',
+        'definition',
+        'definitions',
+        'explanation',
+        '意思',
+    ],
+    phrase: ['phrase', 'word', 'vocab', 'term', '語彙', '詞'],
+    sentence: ['sentence', 'example', 'examples', '例句', '例文'],
+    type: ['type', 'category', 'reading', '分類', '類型'],
 };
 
 function usage() {

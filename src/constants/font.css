@@ -20,6 +20,13 @@
     --font-heading: var(--fw-bold) var(--fs-heading) / 1 var(--ff-display);
     --font-display: var(--fw-bold) var(--fs-title) / 0.94 var(--ff-display);
 
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
     --space-8: 8px;
     --space-12: 12px;
     --space-16: 16px;
@@ -52,5 +59,12 @@
     --radius-24: 24px;
     --radius-32: 32px;
 
+    --nav-height: 4rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --stroke-width-thin: 0.125rem;
+    --duration-interaction-fast: 200ms;
     --duration-fast: 160ms;
 }
