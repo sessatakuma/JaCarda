@@ -50,14 +50,6 @@
     grid-template-rows: auto minmax(0, 1fr);
 }
 
-.panel-title {
-    color: var(--color-accent-green);
-    font-size: 1.375rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-}
-
 .panel-title-row {
     display: flex;
     align-items: center;
@@ -192,47 +184,9 @@
     margin-bottom: var(--space-3);
 }
 
-.button {
-    height: calc(var(--space-6) + var(--space-2));
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    padding: 0 var(--space-4);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    font-weight: 700;
-    transition:
-        background-color var(--duration-interaction-fast) ease,
-        opacity var(--duration-interaction-fast) ease;
-}
-
-.button-icon {
-    display: inline-flex;
-    line-height: 0;
-}
-
-.button--primary {
-    color: var(--color-text-inverted);
-    background: var(--color-accent-green);
-}
-
-.button--ghost {
-    color: var(--color-accent-green);
-    background: var(--color-accent-green-light);
-}
-
 .button.panel-help-button {
     color: var(--color-accent-green);
     background: transparent;
-}
-
-.button:hover {
-    opacity: 0.86;
-}
-
-.button:disabled {
-    opacity: 0.6;
 }
 
 .sheet-dialog-backdrop {

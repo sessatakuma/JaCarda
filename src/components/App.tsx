@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useEffect, useState, type JSX, type ReactNode } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import {
     CircleHelp,
     CloudUpload,
@@ -20,8 +20,10 @@ import {
     splitPhraseReading,
     type VocabCard,
 } from '../lib/vocabCards.js';
+import { AppButton } from './AppButton.js';
 import { Footer } from './Footer.js';
 import { Nav } from './Nav.js';
+import { PanelTitle } from './PanelTitle.js';
 
 import './App.css';
 
@@ -556,47 +558,6 @@ export function App(): JSX.Element {
                 </div>
             ) : null}
         </>
-    );
-}
-
-function PanelTitle({ children }: { children: ReactNode }): JSX.Element {
-    return <h2 className='panel-title'>{children}</h2>;
-}
-
-function AppButton({
-    ariaLabel,
-    children,
-    className,
-    disabled,
-    icon,
-    onClick,
-    type = 'button',
-    variant = 'primary',
-}: {
-    ariaLabel?: string;
-    children?: ReactNode;
-    className?: string;
-    disabled?: boolean;
-    icon?: ReactNode;
-    onClick?: () => void;
-    type?: 'button' | 'submit';
-    variant?: 'ghost' | 'primary';
-}): JSX.Element {
-    const classNames = ['button', `button--${variant}`, className]
-        .filter(Boolean)
-        .join(' ');
-
-    return (
-        <button
-            aria-label={ariaLabel}
-            className={classNames}
-            disabled={disabled}
-            type={type}
-            onClick={onClick}
-        >
-            {icon ? <span className='button-icon'>{icon}</span> : null}
-            {children ? <span>{children}</span> : null}
-        </button>
     );
 }
 

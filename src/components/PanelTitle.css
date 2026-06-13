@@ -1,0 +1,7 @@
+.panel-title {
+    color: var(--color-accent-green);
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
