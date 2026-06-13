@@ -23,6 +23,8 @@ import {
 import { Footer } from './Footer.js';
 import { Nav } from './Nav.js';
 
+import './App.css';
+
 const sheetStorageKey = 'jacarda-sheet-url';
 const webhookStorageKey = 'jacarda-sheet-webhook-url';
 const defaultWebhookUrl =
