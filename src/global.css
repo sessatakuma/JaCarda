@@ -159,6 +159,7 @@ button:disabled {
 
 .edit-panel .button {
     align-self: end;
+    justify-self: start;
     margin-top: auto;
     margin-bottom: var(--space-3);
 }
@@ -173,6 +174,25 @@ button:disabled {
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.01em;
+}
+
+.panel-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    justify-content: space-between;
+}
+
+.panel-help-button {
+    width: calc(var(--space-6) + var(--space-2));
+    min-width: calc(var(--space-6) + var(--space-2));
+    color: var(--color-accent-green);
+    background: transparent;
+    padding: 0;
+}
+
+.edit-save-button {
+    width: fit-content;
 }
 
 .used-message {
@@ -320,6 +340,11 @@ button:disabled {
     background: var(--color-accent-green-light);
 }
 
+.button.panel-help-button {
+    color: var(--color-accent-green);
+    background: transparent;
+}
+
 .button:hover {
     opacity: 0.86;
 }
@@ -396,78 +421,6 @@ button:disabled {
     display: flex;
     gap: var(--space-3);
     justify-content: flex-end;
-}
-
-.usage-section {
-    padding: var(--space-7) 0;
-    border-top: 1px solid var(--color-border);
-    background: var(--color-bg-primary);
-}
-
-.usage-section-inner {
-    width: 100%;
-    max-width: var(--size-page-max);
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-}
-
-.usage-intro {
-    display: grid;
-    gap: var(--space-2);
-    padding-bottom: var(--space-6);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.usage-intro h2 {
-    color: var(--color-text-primary);
-    font-size: 1.75rem;
-    line-height: 1.2;
-}
-
-.usage-intro p,
-.usage-guide-copy p {
-    color: var(--color-text-secondary);
-    font-size: 1rem;
-    line-height: 1.75;
-    text-wrap: pretty;
-}
-
-.usage-guide {
-    display: grid;
-    gap: 0;
-}
-
-.usage-guide-row {
-    display: grid;
-    gap: var(--space-3);
-    padding: var(--space-6) 0;
-}
-
-.usage-guide-row + .usage-guide-row {
-    border-top: 1px solid var(--color-border);
-}
-
-.usage-guide-copy {
-    display: grid;
-    align-content: center;
-    gap: var(--space-2);
-    max-width: 56rem;
-}
-
-.usage-guide-copy h3 {
-    color: var(--color-text-primary);
-    font-size: 1.125rem;
-    line-height: 1.3;
-}
-
-.usage-guide-copy code {
-    padding: 0 var(--space-1);
-    color: var(--color-text-primary);
-    border-radius: var(--radius-sm);
-    background: var(--color-accent-green-light);
-    font-family: var(--ff-body);
-    font-size: 0.875rem;
-    white-space: nowrap;
 }
 
 .site-footer {
@@ -612,14 +565,6 @@ button:disabled {
 }
 
 @media (min-width: 1024px) {
-    .usage-section-inner {
-        padding-inline: calc((var(--space-7) * 2) + var(--space-6));
-    }
-
-    .usage-intro p {
-        white-space: nowrap;
-    }
-
     .site-footer-inner {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -695,18 +640,6 @@ button:disabled {
     .sheet-dialog-actions {
         align-items: stretch;
         flex-direction: column;
-    }
-
-    .usage-section-inner {
-        padding: 0 var(--space-4);
-    }
-
-    .usage-intro {
-        padding-bottom: var(--space-5);
-    }
-
-    .usage-guide-row {
-        padding: var(--space-5) 0;
     }
 
     .site-footer-top {

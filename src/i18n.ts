@@ -12,6 +12,7 @@ const resources = {
                 downloadPng: 'Download PNG',
                 downloading: 'Downloading...',
                 dismiss: 'Dismiss',
+                help: 'Help',
                 markAsUsed: 'Mark "{{phrase}}" as used',
                 notYet: 'Not yet',
                 saveEdit: 'Save edit to sheet',
@@ -59,6 +60,9 @@ const resources = {
             },
             rows: {
                 aria: 'Sheet rows',
+                helpBody:
+                    'Columns: phrase is the word, meaning is the definition, sentence is the example, type is the top label, reading is furigana, and usedAt hides used rows. Save syncs edits to Google Sheets.',
+                helpTitle: 'Sheet help',
                 noReading: 'No reading',
                 title: 'Sheet',
                 untitled: 'Untitled card',
@@ -75,17 +79,6 @@ const resources = {
             studio: {
                 aria: 'Card studio',
             },
-            usage: {
-                aria: 'Usage guide',
-                intro: 'Connect the Sheet URL, adjust the content, then export the card.',
-                saveBody:
-                    'Save edit syncs changes back to Google Sheets. After downloading a PNG, Mark as used writes usedAt, so the row no longer appears in the list.',
-                saveTitle: 'Save and mark used',
-                sheetBody:
-                    'Use a public or published Google Sheet. <code>phrase</code> is the card word, <code>meaning</code> is the definition, and <code>sentence</code> is the example sentence. Optional <code>type</code> sets the top label, <code>reading</code> sets furigana, and <code>usedAt</code> hides used rows.',
-                sheetTitle: 'Set up the Sheet',
-                title: 'Usage',
-            },
         },
     },
     'zh-Hant': {
@@ -97,6 +90,7 @@ const resources = {
                 downloadPng: '下載 PNG',
                 downloading: '下載中...',
                 dismiss: '關閉',
+                help: '說明',
                 markAsUsed: '將「{{phrase}}」標記為已使用',
                 notYet: '還不要',
                 saveEdit: '儲存編輯到試算表',
@@ -144,6 +138,9 @@ const resources = {
             },
             rows: {
                 aria: '試算表列',
+                helpBody:
+                    '欄位：phrase 是詞句，meaning 是意思，sentence 是例句，type 是上方標籤，reading 是假名來源，usedAt 會隱藏已使用列。儲存會同步回 Google 試算表。',
+                helpTitle: '試算表說明',
                 noReading: '沒有讀音',
                 title: '試算表',
                 untitled: '未命名卡片',
@@ -159,17 +156,6 @@ const resources = {
             },
             studio: {
                 aria: '卡片工作區',
-            },
-            usage: {
-                aria: '使用方式說明',
-                intro: '連接試算表網址，調整內容後匯出卡片。',
-                saveBody:
-                    '儲存編輯會把變更同步回 Google 試算表。下載 PNG 後，標記為已使用會寫入 usedAt，之後便不會再出現在清單中。',
-                saveTitle: '儲存並標記已使用',
-                sheetBody:
-                    '使用公開或已發布的 Google 試算表。<code>phrase</code> 是卡片詞句，<code>meaning</code> 是意思，<code>sentence</code> 是例句。選填的 <code>type</code> 會顯示為上方標籤，<code>reading</code> 會作為假名來源，<code>usedAt</code> 會隱藏已使用列。',
-                sheetTitle: '設定試算表',
-                title: '使用方式',
             },
         },
     },

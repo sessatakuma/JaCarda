@@ -6,8 +6,17 @@ import {
     type MouseEvent,
     type ReactNode,
 } from 'react';
-import { Download, Facebook, Instagram, RefreshCw, X } from 'lucide-react';
-import { Trans, useTranslation } from 'react-i18next';
+import {
+    CircleHelp,
+    CloudUpload,
+    Download,
+    Facebook,
+    FileSpreadsheet,
+    Instagram,
+    RefreshCw,
+    X,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import {
     fetchSheetCards,
@@ -46,6 +55,7 @@ export function App(): JSX.Element {
         () => (sheetUrl ? 'loading' : 'ready')
     );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isMarkDialogOpen, setIsMarkDialogOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -295,7 +305,23 @@ export function App(): JSX.Element {
                             className='row-panel'
                             aria-label={t('rows.aria')}
                         >
-                            <PanelTitle>{t('rows.title')}</PanelTitle>
+                            <div className='panel-title-row'>
+                                <PanelTitle>{t('rows.title')}</PanelTitle>
+                                <AppButton
+                                    ariaLabel={t('actions.help')}
+                                    className='panel-help-button'
+                                    icon={
+                                        <CircleHelp
+                                            size={20}
+                                            aria-hidden='true'
+                                        />
+                                    }
+                                    variant='ghost'
+                                    onClick={() => {
+                                        setIsHelpDialogOpen(true);
+                                    }}
+                                />
+                            </div>
                             {sheetUrl ? (
                                 <div className='row-list'>
                                     {unusedCards.map((card, index) => (
@@ -332,6 +358,12 @@ export function App(): JSX.Element {
                             ) : (
                                 <div className='sheet-connect-empty'>
                                     <AppButton
+                                        icon={
+                                            <FileSpreadsheet
+                                                size={20}
+                                                aria-hidden='true'
+                                            />
+                                        }
                                         onClick={() => {
                                             setIsDialogOpen(true);
                                         }}
@@ -403,7 +435,11 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <AppButton
+                                className='edit-save-button'
                                 disabled={isSaving}
+                                icon={
+                                    <CloudUpload size={20} aria-hidden='true' />
+                                }
                                 onClick={() => {
                                     void saveEditedCard();
                                 }}
@@ -442,9 +478,30 @@ export function App(): JSX.Element {
                         </section>
                     </div>
                 </section>
-                <UsageSection />
             </main>
             <Footer />
+
+            {isHelpDialogOpen ? (
+                <div className='sheet-dialog-backdrop'>
+                    <dialog className='sheet-dialog' open>
+                        <div className='sheet-dialog-content'>
+                            <div className='sheet-dialog-header'>
+                                <h2>{t('rows.helpTitle')}</h2>
+                                <AppButton
+                                    ariaLabel={t('actions.dismiss')}
+                                    className='sheet-dialog-dismiss'
+                                    icon={<X size={20} aria-hidden='true' />}
+                                    variant='ghost'
+                                    onClick={() => {
+                                        setIsHelpDialogOpen(false);
+                                    }}
+                                />
+                            </div>
+                            <p>{t('rows.helpBody')}</p>
+                        </div>
+                    </dialog>
+                </div>
+            ) : null}
 
             {isDialogOpen ? (
                 <div className='sheet-dialog-backdrop'>
@@ -526,42 +583,6 @@ export function App(): JSX.Element {
                 </div>
             ) : null}
         </>
-    );
-}
-
-function UsageSection(): JSX.Element {
-    const { t } = useTranslation();
-
-    return (
-        <section className='usage-section' aria-labelledby='usage-title'>
-            <div className='usage-section-inner'>
-                <div className='usage-intro'>
-                    <h2 id='usage-title'>{t('usage.title')}</h2>
-                    <p>{t('usage.intro')}</p>
-                </div>
-
-                <div className='usage-guide' aria-label={t('usage.aria')}>
-                    <article className='usage-guide-row'>
-                        <div className='usage-guide-copy'>
-                            <h3>{t('usage.sheetTitle')}</h3>
-                            <p>
-                                <Trans
-                                    i18nKey='usage.sheetBody'
-                                    components={{ code: <code /> }}
-                                />
-                            </p>
-                        </div>
-                    </article>
-
-                    <article className='usage-guide-row'>
-                        <div className='usage-guide-copy'>
-                            <h3>{t('usage.saveTitle')}</h3>
-                            <p>{t('usage.saveBody')}</p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
     );
 }
 
