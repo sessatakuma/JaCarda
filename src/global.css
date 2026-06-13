@@ -67,7 +67,6 @@ button:disabled {
 
 :focus-visible {
     outline: var(--stroke-width-thin) solid var(--color-accent-green);
-    outline-offset: var(--space-1);
 }
 
 #root {
