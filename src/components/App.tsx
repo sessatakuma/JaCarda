@@ -13,6 +13,7 @@ import {
     Instagram,
     RefreshCw,
     Settings,
+    X,
 } from 'lucide-react';
 
 import {
@@ -74,6 +75,12 @@ export function App(): JSX.Element {
             void connectToSheet(sheetUrl);
         }
     }, []);
+
+    function closeConnectDialog(): void {
+        setIsDialogOpen(false);
+        setDraftSheetUrl(sheetUrl);
+        setDraftWebhookUrl(webhookUrl);
+    }
 
     async function connectToSheet(nextSheetUrl: string): Promise<void> {
         const normalizedSheetUrl = nextSheetUrl.trim();
@@ -310,34 +317,49 @@ export function App(): JSX.Element {
                     <div className='studio-grid'>
                         <aside className='row-panel' aria-label='Sheet rows'>
                             <PanelTitle>Sheet</PanelTitle>
-                            <div className='row-list'>
-                                {unusedCards.map((card, index) => (
-                                    <button
-                                        className={
-                                            index === selectedIndex
-                                                ? 'row-card row-card--active'
-                                                : 'row-card'
-                                        }
-                                        key={`${card.phrase}-${index}`}
-                                        type='button'
+                            {sheetUrl ? (
+                                <div className='row-list'>
+                                    {unusedCards.map((card, index) => (
+                                        <button
+                                            className={
+                                                index === selectedIndex
+                                                    ? 'row-card row-card--active'
+                                                    : 'row-card'
+                                            }
+                                            key={`${card.phrase}-${index}`}
+                                            type='button'
+                                            onClick={() => {
+                                                setSelectedIndex(index);
+                                            }}
+                                        >
+                                            <span>
+                                                {String(index + 1).padStart(
+                                                    2,
+                                                    '0'
+                                                )}
+                                            </span>
+                                            <strong>
+                                                {card.phrase || 'Untitled card'}
+                                            </strong>
+                                            <small>
+                                                {card.reading ||
+                                                    card.type ||
+                                                    'No reading'}
+                                            </small>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className='sheet-connect-empty'>
+                                    <AppButton
                                         onClick={() => {
-                                            setSelectedIndex(index);
+                                            setIsDialogOpen(true);
                                         }}
                                     >
-                                        <span>
-                                            {String(index + 1).padStart(2, '0')}
-                                        </span>
-                                        <strong>
-                                            {card.phrase || 'Untitled card'}
-                                        </strong>
-                                        <small>
-                                            {card.reading ||
-                                                card.type ||
-                                                'No reading'}
-                                        </small>
-                                    </button>
-                                ))}
-                            </div>
+                                        Connect to Google Sheet
+                                    </AppButton>
+                                </div>
+                            )}
                         </aside>
 
                         <section className='edit-panel' aria-label='Text edit'>
@@ -457,7 +479,16 @@ export function App(): JSX.Element {
                                 void connectToSheet(draftSheetUrl.trim());
                             }}
                         >
-                            <h2>Connect Google Sheet</h2>
+                            <div className='sheet-dialog-header'>
+                                <h2>Connect Google Sheet</h2>
+                                <AppButton
+                                    ariaLabel='Dismiss'
+                                    className='sheet-dialog-dismiss'
+                                    icon={<X size={20} aria-hidden='true' />}
+                                    variant='ghost'
+                                    onClick={closeConnectDialog}
+                                />
+                            </div>
                             <p>
                                 Use a public or published Sheet URL. This stays
                                 on this device.
@@ -471,23 +502,10 @@ export function App(): JSX.Element {
                                     }}
                                 />
                             </label>
-                            <label className='sheet-dialog-field'>
-                                <span>Apps Script write webhook URL</span>
-                                <input
-                                    placeholder='https://script.google.com/macros/s/.../exec'
-                                    value={draftWebhookUrl}
-                                    onChange={(event) => {
-                                        setDraftWebhookUrl(event.target.value);
-                                    }}
-                                />
-                            </label>
                             <div className='sheet-dialog-actions'>
                                 <AppButton
                                     variant='ghost'
-                                    onClick={() => {
-                                        setIsDialogOpen(false);
-                                        setDraftSheetUrl(sheetUrl);
-                                    }}
+                                    onClick={closeConnectDialog}
                                 >
                                     Cancel
                                 </AppButton>

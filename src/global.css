@@ -272,6 +272,12 @@ button:disabled {
     overflow: auto;
 }
 
+.sheet-connect-empty {
+    display: grid;
+    place-items: center;
+    min-height: 0;
+}
+
 .row-card {
     display: grid;
     grid-template-columns: var(--space-6) minmax(0, 1fr);
@@ -412,7 +418,10 @@ button:disabled {
 }
 
 .sheet-dialog {
-    width: min(100%, 560px);
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(calc(100vw - (var(--space-4) * 2)), var(--size-dialog-max));
     color: var(--color-text-primary);
     background: var(--color-bg-secondary);
     border-radius: var(--radius-lg);
@@ -426,8 +435,21 @@ button:disabled {
     padding: var(--space-6);
 }
 
+.sheet-dialog-header {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    justify-content: space-between;
+}
+
 .sheet-dialog h2 {
     font-size: 1.5rem;
+}
+
+.sheet-dialog-dismiss {
+    min-width: calc(var(--space-6) + var(--space-2));
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .sheet-dialog p,
