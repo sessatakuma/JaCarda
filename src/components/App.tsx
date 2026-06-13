@@ -7,6 +7,7 @@ import {
     type ReactNode,
 } from 'react';
 import { Download, Facebook, Instagram, RefreshCw, X } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 
 import {
     fetchSheetCards,
@@ -28,6 +29,7 @@ const sampleCards = parseCsvCards(sampleCsv);
 type ConnectionState = 'error' | 'loading' | 'ready';
 
 export function App(): JSX.Element {
+    const { t } = useTranslation();
     const [sheetUrl, setSheetUrl] = useState(
         () => window.localStorage.getItem(sheetStorageKey) ?? ''
     );
@@ -106,7 +108,7 @@ export function App(): JSX.Element {
             setUsedMessage(
                 error instanceof Error
                     ? error.message
-                    : 'Could not connect to the Sheet.'
+                    : t('errors.connectSheet')
             );
         }
     }
@@ -136,7 +138,7 @@ export function App(): JSX.Element {
         }
 
         const nextValue = window.prompt(
-            `Edit ${field}`,
+            t('prompts.editField', { field }),
             String(selectedCard[field] ?? '')
         );
 
@@ -172,9 +174,7 @@ export function App(): JSX.Element {
         payload: Partial<VocabCard> & { rowNumber: number }
     ): Promise<void> {
         if (!webhookUrl.trim()) {
-            throw new Error(
-                'Add an Apps Script webhook in Connect Google Sheet before saving.'
-            );
+            throw new Error(t('errors.webhookMissing'));
         }
 
         const response = await fetch(webhookUrl.trim(), {
@@ -197,7 +197,7 @@ export function App(): JSX.Element {
 
     async function saveEditedCard(): Promise<void> {
         setIsSaving(true);
-        setUsedMessage(`Saving "${selectedCard.phrase}" to Google Sheets...`);
+        setUsedMessage(t('status.saving', { phrase: selectedCard.phrase }));
 
         try {
             await writeSheetRow({
@@ -208,12 +208,10 @@ export function App(): JSX.Element {
                 sentence: selectedCard.sentence,
                 type: selectedCard.type,
             });
-            setUsedMessage(`Saved "${selectedCard.phrase}".`);
+            setUsedMessage(t('status.saved', { phrase: selectedCard.phrase }));
         } catch (error) {
             setUsedMessage(
-                error instanceof Error
-                    ? error.message
-                    : 'Could not save edits back to Google Sheets.'
+                error instanceof Error ? error.message : t('errors.saveSheet')
             );
         } finally {
             setIsSaving(false);
@@ -225,7 +223,7 @@ export function App(): JSX.Element {
         const usedAt = new Date().toISOString();
 
         setIsSaving(true);
-        setUsedMessage(`Marking "${cardToMark.phrase}" as used...`);
+        setUsedMessage(t('status.markingUsed', { phrase: cardToMark.phrase }));
 
         try {
             await writeSheetRow({
@@ -249,12 +247,12 @@ export function App(): JSX.Element {
             );
             setIsMarkDialogOpen(false);
             setSelectedIndex(0);
-            setUsedMessage(`Marked "${cardToMark.phrase}" as used.`);
+            setUsedMessage(
+                t('status.markedUsed', { phrase: cardToMark.phrase })
+            );
         } catch (error) {
             setUsedMessage(
-                error instanceof Error
-                    ? error.message
-                    : 'Could not write used date back to Google Sheets.'
+                error instanceof Error ? error.message : t('errors.usedAtSheet')
             );
         } finally {
             setIsSaving(false);
@@ -277,10 +275,10 @@ export function App(): JSX.Element {
         } catch (error) {
             setUsedMessage(
                 error instanceof DOMException && error.name === 'AbortError'
-                    ? 'PNG download canceled.'
+                    ? t('errors.pngCanceled')
                     : error instanceof Error
                       ? error.message
-                      : 'Could not download PNG.'
+                      : t('errors.downloadPng')
             );
         } finally {
             setIsDownloading(false);
@@ -291,10 +289,13 @@ export function App(): JSX.Element {
         <>
             <Nav />
             <main className='app' id='main-content'>
-                <section className='studio-shell' aria-label='Card studio'>
+                <section className='studio-shell' aria-label={t('studio.aria')}>
                     <div className='studio-grid'>
-                        <aside className='row-panel' aria-label='Sheet rows'>
-                            <PanelTitle>Sheet</PanelTitle>
+                        <aside
+                            className='row-panel'
+                            aria-label={t('rows.aria')}
+                        >
+                            <PanelTitle>{t('rows.title')}</PanelTitle>
                             {sheetUrl ? (
                                 <div className='row-list'>
                                     {unusedCards.map((card, index) => (
@@ -317,12 +318,13 @@ export function App(): JSX.Element {
                                                 )}
                                             </span>
                                             <strong>
-                                                {card.phrase || 'Untitled card'}
+                                                {card.phrase ||
+                                                    t('rows.untitled')}
                                             </strong>
                                             <small>
                                                 {card.reading ||
                                                     card.type ||
-                                                    'No reading'}
+                                                    t('rows.noReading')}
                                             </small>
                                         </button>
                                     ))}
@@ -334,16 +336,19 @@ export function App(): JSX.Element {
                                             setIsDialogOpen(true);
                                         }}
                                     >
-                                        Connect to Google Sheet
+                                        {t('actions.connectSheet')}
                                     </AppButton>
                                 </div>
                             )}
                         </aside>
 
-                        <section className='edit-panel' aria-label='Text edit'>
-                            <PanelTitle>Edit</PanelTitle>
+                        <section
+                            className='edit-panel'
+                            aria-label={t('edit.title')}
+                        >
+                            <PanelTitle>{t('edit.title')}</PanelTitle>
                             <label className='edit-field'>
-                                <span>Type</span>
+                                <span>{t('edit.type')}</span>
                                 <input
                                     value={selectedCard.type}
                                     onChange={(event) => {
@@ -355,7 +360,7 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <label className='edit-field'>
-                                <span>Phrase + Furigana</span>
+                                <span>{t('edit.phraseReading')}</span>
                                 <input
                                     value={formatPhraseWithReading(
                                         selectedCard
@@ -368,7 +373,7 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <label className='edit-field'>
-                                <span>Meaning</span>
+                                <span>{t('edit.meaning')}</span>
                                 <textarea
                                     rows={4}
                                     value={selectedCard.meaning}
@@ -381,7 +386,7 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <label className='edit-field'>
-                                <span>Sentence</span>
+                                <span>{t('edit.sentence')}</span>
                                 <textarea
                                     rows={4}
                                     value={selectedCard.sentence}
@@ -399,7 +404,9 @@ export function App(): JSX.Element {
                                     void saveEditedCard();
                                 }}
                             >
-                                {isSaving ? 'Saving...' : 'Save edit to sheet'}
+                                {isSaving
+                                    ? t('actions.saving')
+                                    : t('actions.saveEdit')}
                             </AppButton>
                             {usedMessage ? (
                                 <p className='used-message'>{usedMessage}</p>
@@ -408,9 +415,9 @@ export function App(): JSX.Element {
 
                         <section
                             className='preview-panel'
-                            aria-label='Editable SVG preview'
+                            aria-label={t('preview.aria')}
                         >
-                            <PanelTitle>Preview</PanelTitle>
+                            <PanelTitle>{t('preview.title')}</PanelTitle>
                             <div
                                 className='svg-preview'
                                 dangerouslySetInnerHTML={{ __html: previewSvg }}
@@ -425,8 +432,8 @@ export function App(): JSX.Element {
                                 }}
                             >
                                 {isDownloading
-                                    ? 'Downloading...'
-                                    : 'Download PNG'}
+                                    ? t('actions.downloading')
+                                    : t('actions.downloadPng')}
                             </AppButton>
                         </section>
                     </div>
@@ -446,22 +453,18 @@ export function App(): JSX.Element {
                             }}
                         >
                             <div className='sheet-dialog-header'>
-                                <h2>Connect Google Sheet</h2>
+                                <h2>{t('dialog.connectTitle')}</h2>
                                 <AppButton
-                                    ariaLabel='Dismiss'
+                                    ariaLabel={t('actions.dismiss')}
                                     className='sheet-dialog-dismiss'
                                     icon={<X size={20} aria-hidden='true' />}
                                     variant='ghost'
                                     onClick={closeConnectDialog}
                                 />
                             </div>
-                            <p>
-                                Paste a public or published Sheet URL. The
-                                deployed Apps Script writeback is already
-                                configured.
-                            </p>
+                            <p>{t('dialog.connectBody')}</p>
                             <label className='sheet-dialog-field'>
-                                <span>Sheet URL</span>
+                                <span>{t('sheet.urlLabel')}</span>
                                 <input
                                     value={draftSheetUrl}
                                     onChange={(event) => {
@@ -474,14 +477,14 @@ export function App(): JSX.Element {
                                     variant='ghost'
                                     onClick={closeConnectDialog}
                                 >
-                                    Cancel
+                                    {t('actions.cancel')}
                                 </AppButton>
                                 <AppButton
                                     type='submit'
                                     disabled={connectionState === 'loading'}
                                     icon={<RefreshCw size={20} />}
                                 >
-                                    Connect
+                                    {t('actions.connect')}
                                 </AppButton>
                             </div>
                         </form>
@@ -492,11 +495,8 @@ export function App(): JSX.Element {
                 <div className='sheet-dialog-backdrop'>
                     <dialog className='sheet-dialog' open>
                         <div className='sheet-dialog-content'>
-                            <h2>PNG downloaded</h2>
-                            <p>
-                                Confirm this card was generated before marking
-                                it used in Google Sheets.
-                            </p>
+                            <h2>{t('dialog.downloadedTitle')}</h2>
+                            <p>{t('dialog.downloadedBody')}</p>
                             <div className='sheet-dialog-actions'>
                                 <AppButton
                                     variant='ghost'
@@ -504,7 +504,7 @@ export function App(): JSX.Element {
                                         setIsMarkDialogOpen(false);
                                     }}
                                 >
-                                    Not yet
+                                    {t('actions.notYet')}
                                 </AppButton>
                                 <AppButton
                                     disabled={isSaving}
@@ -512,7 +512,9 @@ export function App(): JSX.Element {
                                         void markSelectedCardAsUsed();
                                     }}
                                 >
-                                    Mark "{selectedCard.phrase}" as used
+                                    {t('actions.markAsUsed', {
+                                        phrase: selectedCard.phrase,
+                                    })}
                                 </AppButton>
                             </div>
                         </div>
@@ -524,63 +526,57 @@ export function App(): JSX.Element {
 }
 
 function UsageSection(): JSX.Element {
+    const { t } = useTranslation();
+
     return (
         <section className='usage-section' aria-labelledby='usage-title'>
             <div className='usage-section-inner'>
                 <div className='usage-intro'>
-                    <h2 id='usage-title'>Usage</h2>
-                    <p>
-                        Prepare one row per card, connect the Sheet URL, adjust
-                        the preview, then export the card.
-                    </p>
+                    <h2 id='usage-title'>{t('usage.title')}</h2>
+                    <p>{t('usage.intro')}</p>
                 </div>
 
-                <div className='usage-guide' aria-label='Usage guide'>
+                <div className='usage-guide' aria-label={t('usage.aria')}>
                     <article className='usage-guide-row'>
                         <div className='usage-guide-copy'>
-                            <h3>Set up the Sheet</h3>
+                            <h3>{t('usage.sheetTitle')}</h3>
                             <p>
-                                Use a public or published Google Sheet with
-                                <code>phrase</code>, <code>meaning</code>, and
-                                <code>sentence</code> columns. Add
-                                <code>type</code>, <code>reading</code>, or
-                                <code>usedAt</code> when needed.
+                                <Trans
+                                    i18nKey='usage.sheetBody'
+                                    components={{ code: <code /> }}
+                                />
                             </p>
                         </div>
                     </article>
 
                     <article className='usage-guide-row'>
                         <div className='usage-guide-copy'>
-                            <h3>Write readings clearly</h3>
+                            <h3>{t('usage.readingTitle')}</h3>
                             <p>
-                                Put furigana in the reading column, or append it
-                                to the phrase like <code>散歩（さんぽ）</code>{' '}
-                                or <code>散歩(さんぽ)</code>.
+                                <Trans
+                                    i18nKey='usage.readingBody'
+                                    components={{ code: <code /> }}
+                                />
                             </p>
                         </div>
                     </article>
 
                     <article className='usage-guide-row'>
                         <div className='usage-guide-copy'>
-                            <h3>Split meaning lists</h3>
+                            <h3>{t('usage.meaningTitle')}</h3>
                             <p>
-                                A single meaning stays unnumbered. Multiple
-                                meanings become a numbered list when separated
-                                by new lines, semicolons, or pipes, such as
-                                <code>to study | to learn</code>.
+                                <Trans
+                                    i18nKey='usage.meaningBody'
+                                    components={{ code: <code /> }}
+                                />
                             </p>
                         </div>
                     </article>
 
                     <article className='usage-guide-row'>
                         <div className='usage-guide-copy'>
-                            <h3>Save and mark used</h3>
-                            <p>
-                                Save edit writes text changes back to the same
-                                Sheet row. After downloading a PNG, Mark as used
-                                writes usedAt and removes the row from the
-                                unused list.
-                            </p>
+                            <h3>{t('usage.saveTitle')}</h3>
+                            <p>{t('usage.saveBody')}</p>
                         </div>
                     </article>
                 </div>
@@ -862,6 +858,7 @@ function GithubIcon({ size = 24 }: { size?: number }): JSX.Element {
 }
 
 function Footer(): JSX.Element {
+    const { t } = useTranslation();
     const emailAddress = 'contact@sessatakuma.dev';
     const socialLinks = [
         {
@@ -886,7 +883,7 @@ function Footer(): JSX.Element {
         },
     ];
     const showPendingAccountDialog = (): void => {
-        window.alert('We are working on this account.');
+        window.alert(t('footer.pendingAccount'));
     };
 
     return (
@@ -911,7 +908,7 @@ function Footer(): JSX.Element {
                     </a>
                     <nav
                         className='site-footer-social'
-                        aria-label='Social media'
+                        aria-label={t('footer.socialLabel')}
                     >
                         <div className='site-footer-social-links'>
                             {socialLinks.map((link) =>
@@ -940,7 +937,9 @@ function Footer(): JSX.Element {
                         <a
                             className='site-footer-email-link'
                             href={`mailto:${emailAddress}`}
-                            aria-label={`Email: ${emailAddress}`}
+                            aria-label={t('footer.emailLabel', {
+                                email: emailAddress,
+                            })}
                         >
                             {emailAddress}
                         </a>
@@ -948,15 +947,7 @@ function Footer(): JSX.Element {
                 </div>
 
                 <section className='site-footer-about' aria-label='Sessatakuma'>
-                    <p>
-                        Sessatakuma is developing tools for Japanese learning
-                        and planning a Japanese speaking practice community. By
-                        sharing the complete practice system our team members
-                        built in the past, along with tools designed for that
-                        system, we want to help learners make speaking practice
-                        more efficient and steadily build the confidence to
-                        speak Japanese.
-                    </p>
+                    <p>{t('footer.about')}</p>
                 </section>
             </div>
             <p className='site-footer-wordmark' aria-label='Sessatakuma'>

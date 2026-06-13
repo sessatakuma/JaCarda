@@ -18,9 +18,11 @@
     },
     "dependencies": {
         "@tanstack/react-query": "5.100.11",
+        "i18next": "^26.3.1",
         "lucide-react": "0.554.0",
         "react": "19.2.6",
-        "react-dom": "19.2.6"
+        "react-dom": "19.2.6",
+        "react-i18next": "^17.0.8"
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "4.7.1",
