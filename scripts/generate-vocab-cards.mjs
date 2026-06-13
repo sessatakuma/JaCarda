@@ -559,19 +559,15 @@ text {
     font-family: ${STYLE.displayTypeface};
     font-weight: 900;
     font-size: ${scale.display}px;
-    line-height: 1;
-    color: ${STYLE.ink};
+    fill: ${STYLE.ink};
     letter-spacing: 0;
-    text-align: center;
-    white-space: nowrap;
 }
-.phrase ruby {
-    ruby-position: over;
-}
-.phrase rt {
+.phrase-reading {
     font-family: ${STYLE.displayTypeface};
+    font-weight: 900;
     font-size: ${scale.body}px;
-    line-height: 1;
+    fill: ${STYLE.ink};
+    letter-spacing: 0;
 }
 .heading {
     font-family: ${STYLE.displayTypeface};
@@ -601,6 +597,7 @@ text {
 <rect x="${phraseRuleBox.x}" y="${phraseRuleBox.y}" width="${phraseRuleBox.width}" height="${phraseRuleBox.height}" rx="16" fill="${STYLE.accentSoft}"/>
 ${phraseRubyNode(card, {
     height: phraseBlock.height,
+    scale,
     width: phraseBox.width,
     x: phraseBox.x,
     y: phraseBox.centerY - phraseBlock.height / 2,
@@ -665,67 +662,48 @@ function phraseBlockMetrics(scale) {
 }
 
 function phraseRubyNode(card, options) {
-    return [
-        `<foreignObject x="${options.x}" y="${options.y}" width="${options.width}" height="${options.height}">`,
-        '<div xmlns="http://www.w3.org/1999/xhtml" class="phrase">',
-        phraseRubyHtml(card.phrase, card.reading),
-        '</div>',
-        '</foreignObject>',
-    ].join('');
-}
+    const centerX = options.x + options.width / 2;
+    const reading = card.reading.trim();
+    const phraseY = options.y + options.height;
 
-function phraseRubyHtml(phrase, reading) {
-    if (!reading.trim()) {
-        return escapeXml(phrase);
+    if (!reading) {
+        return `<text x="${centerX}" y="${options.y + options.height / 2}" class="phrase" text-anchor="middle" dominant-baseline="middle">${escapeXml(card.phrase)}</text>`;
     }
 
-    const segments = phraseSegments(phrase);
+    const segments = phraseSegments(card.phrase, reading);
 
-    if (!segments.some((segment) => segment.isKanji)) {
-        return escapeXml(phrase);
+    if (!segments.some((segment) => segment.rubyText)) {
+        return `<text x="${centerX}" y="${options.y + options.height / 2}" class="phrase" text-anchor="middle" dominant-baseline="middle">${escapeXml(card.phrase)}</text>`;
     }
 
-    const readingChars = [...reading.trim()];
-    let readingIndex = 0;
+    const segmentWidths = segments.map((segment) =>
+        estimateTextWidth(segment.text, options.scale.display)
+    );
+    const phraseWidth = segmentWidths.reduce(
+        (total, width) => total + width,
+        0
+    );
+    let segmentX = centerX - phraseWidth / 2;
+    const segmentNodes = segments.flatMap((segment, index) => {
+        const width = segmentWidths[index];
+        const nodes = [
+            `<text x="${segmentX}" y="${phraseY}" class="phrase" dominant-baseline="text-after-edge">${escapeXml(segment.text)}</text>`,
+        ];
 
-    return segments
-        .map((segment, index) => {
-            if (!segment.isKanji) {
-                readingIndex = consumeMatchingReading(
-                    readingChars,
-                    segment.text,
-                    readingIndex
-                );
+        if (segment.rubyText) {
+            nodes.unshift(
+                `<text x="${segmentX + width / 2}" y="${options.y}" class="phrase-reading" text-anchor="middle" dominant-baseline="hanging">${escapeXml(segment.rubyText)}</text>`
+            );
+        }
 
-                return escapeXml(segment.text);
-            }
+        segmentX += width;
+        return nodes;
+    });
 
-            const nextPlainSegment = segments
-                .slice(index + 1)
-                .find((candidate) => !candidate.isKanji);
-            const endIndex = nextPlainSegment
-                ? findReadingSegment(
-                      readingChars,
-                      nextPlainSegment.text,
-                      readingIndex
-                  )
-                : readingChars.length;
-            const rubyText = readingChars
-                .slice(readingIndex, endIndex)
-                .join('');
-
-            readingIndex = endIndex;
-
-            if (!rubyText) {
-                return escapeXml(segment.text);
-            }
-
-            return `<ruby>${escapeXml(segment.text)}<rt>${escapeXml(rubyText)}</rt></ruby>`;
-        })
-        .join('');
+    return ['<g>', ...segmentNodes, '</g>'].join('');
 }
 
-function phraseSegments(phrase) {
+function phraseSegments(phrase, reading) {
     const segments = [];
 
     for (const char of [...phrase]) {
@@ -739,11 +717,44 @@ function phraseSegments(phrase) {
 
         segments.push({
             isKanji,
+            rubyText: '',
             text: char,
         });
     }
 
-    return segments;
+    const readingChars = [...reading];
+    let readingIndex = 0;
+
+    return segments.map((segment, index) => {
+        if (!segment.isKanji) {
+            readingIndex = consumeMatchingReading(
+                readingChars,
+                segment.text,
+                readingIndex
+            );
+
+            return segment;
+        }
+
+        const nextPlainSegment = segments
+            .slice(index + 1)
+            .find((candidate) => !candidate.isKanji);
+        const endIndex = nextPlainSegment
+            ? findReadingSegment(
+                  readingChars,
+                  nextPlainSegment.text,
+                  readingIndex
+              )
+            : readingChars.length;
+        const rubyText = readingChars.slice(readingIndex, endIndex).join('');
+
+        readingIndex = endIndex;
+
+        return {
+            ...segment,
+            rubyText,
+        };
+    });
 }
 
 function isKanjiChar(char) {
