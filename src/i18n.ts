@@ -74,18 +74,18 @@ const resources = {
             },
             usage: {
                 aria: 'Usage guide',
-                intro: 'Prepare one row per card, connect the Sheet URL, adjust the preview, then export the card.',
+                intro: 'Connect the Sheet URL, adjust the content, then export the card.',
                 meaningBody:
-                    'A single meaning stays unnumbered. Multiple meanings become a numbered list when separated by new lines, semicolons, or pipes, such as <code>to study | to learn</code>.',
+                    'Separate meanings with one item per line, like <code>1. to study</code>, <code>2. to learn</code>, or <code>- to review</code>.',
                 meaningTitle: 'Split meaning lists',
                 readingBody:
-                    'Put furigana in the reading column, or append it to the phrase like <code>散歩（さんぽ）</code> or <code>散歩(さんぽ)</code>.',
+                    'When writing reading inline, use one bracketed format: <code>散歩（さんぽ）</code>.',
                 readingTitle: 'Write readings clearly',
                 saveBody:
-                    'Save edit writes text changes back to the same Sheet row. After downloading a PNG, Mark as used writes usedAt and removes the row from the unused list.',
+                    'Save edit syncs changes back to Google Sheets. After downloading a PNG, Mark as used writes usedAt, so the row no longer appears in the list.',
                 saveTitle: 'Save and mark used',
                 sheetBody:
-                    'Use a public or published Google Sheet with <code>phrase</code>, <code>meaning</code>, and <code>sentence</code> columns. Add <code>type</code>, <code>reading</code>, or <code>usedAt</code> when needed.',
+                    'Use a public or published Google Sheet. <code>phrase</code> is the card word, <code>meaning</code> is the definition, and <code>sentence</code> is the example sentence. Optional <code>type</code> sets the top label, <code>reading</code> sets furigana, and <code>usedAt</code> hides used rows.',
                 sheetTitle: 'Set up the Sheet',
                 title: 'Usage',
             },
@@ -162,18 +162,18 @@ const resources = {
             },
             usage: {
                 aria: '使用方式說明',
-                intro: '每列準備一張卡片，連接試算表網址，調整預覽後匯出卡片。',
+                intro: '連接試算表網址，調整內容後匯出卡片。',
                 meaningBody:
-                    '單一意思不會編號。多個意思可用換行、分號或直線分隔，產生時會變成編號列表，例如 <code>to study | to learn</code>。',
+                    '多個意思請一行一個，格式類似 <code>1. to study</code>、<code>2. to learn</code> 或 <code>- to review</code>。',
                 meaningTitle: '分隔多個意思',
                 readingBody:
-                    '讀音可放在 reading 欄位，也可以接在詞句後方，例如 <code>散歩（さんぽ）</code> 或 <code>散歩(さんぽ)</code>。',
+                    '在詞句後方填寫讀音時，使用單一括號格式：<code>散歩（さんぽ）</code>。',
                 readingTitle: '清楚填寫讀音',
                 saveBody:
-                    '儲存編輯會把文字變更寫回同一列。下載 PNG 後，標記為已使用會寫入 usedAt，並從未使用清單中移除該列。',
+                    '儲存編輯會把變更同步回 Google 試算表。下載 PNG 後，標記為已使用會寫入 usedAt，之後便不會再出現在清單中。',
                 saveTitle: '儲存並標記已使用',
                 sheetBody:
-                    '使用公開或已發布的 Google 試算表，並包含 <code>phrase</code>、<code>meaning</code>、<code>sentence</code> 欄位。需要時可加入 <code>type</code>、<code>reading</code> 或 <code>usedAt</code>。',
+                    '使用公開或已發布的 Google 試算表。<code>phrase</code> 是卡片詞句，<code>meaning</code> 是意思，<code>sentence</code> 是例句。選填的 <code>type</code> 會顯示為上方標籤，<code>reading</code> 會作為假名來源，<code>usedAt</code> 會隱藏已使用列。',
                 sheetTitle: '設定試算表',
                 title: '使用方式',
             },

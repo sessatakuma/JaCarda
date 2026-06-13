@@ -434,6 +434,7 @@ function meaningLines(meaning, scale) {
         .replaceAll('\\n', '\n')
         .split(/\n+|[;|]/)
         .map((item) => item.trim())
+        .map(stripMeaningListMarker)
         .filter(Boolean);
     const items = rawItems.length > 0 ? rawItems : [meaning];
     const shouldNumberItems = items.length > 1;
@@ -451,6 +452,10 @@ function meaningLines(meaning, scale) {
     }
 
     return lines;
+}
+
+function stripMeaningListMarker(value) {
+    return value.replace(/^(?:[-*]\s+|\d+[.)]\s+)/, '').trim();
 }
 
 function textPlan(card, scale) {

@@ -519,6 +519,7 @@ function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
         .replaceAll('\\n', '\n')
         .split(/\n+|[;|]/)
         .map((item) => item.trim())
+        .map(stripMeaningListMarker)
         .filter(Boolean);
     const shouldNumberItems = rawItems.length > 1;
     const lines: Array<MeaningLine> = [];
@@ -535,6 +536,10 @@ function meaningLines(meaning: string, scale: (typeof typeScales)[number]) {
     }
 
     return lines;
+}
+
+function stripMeaningListMarker(value: string): string {
+    return value.replace(/^(?:[-*]\s+|\d+[.)]\s+)/, '').trim();
 }
 
 function textPlan(cardData: VocabCard, scale: (typeof typeScales)[number]) {
