@@ -95,7 +95,7 @@ const style = {
 };
 
 const typeScales = [
-    { body: 32, display: 128, heading: 64, logo: 16, name: 'default' },
+    { body: 48, display: 180, heading: 96, logo: 24, name: 'default' },
     { body: 29.33, display: 117.33, heading: 58.67, logo: 16, name: 'compact' },
     { body: 26.67, display: 106.67, heading: 53.33, logo: 16, name: 'dense' },
 ];
