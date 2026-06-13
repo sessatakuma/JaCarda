@@ -196,19 +196,25 @@ button:disabled {
 }
 
 .row-panel {
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
 }
 
 .sheet-status {
+    position: fixed;
+    right: var(--space-6);
+    bottom: var(--space-6);
+    z-index: 150;
     display: grid;
     grid-template-columns: var(--space-3) minmax(0, 1fr) auto;
     gap: var(--space-3);
     align-items: center;
+    width: min(calc(100vw - (var(--space-6) * 2)), 360px);
     padding: var(--space-3);
     color: var(--color-text-secondary);
     background: var(--color-accent-green-light);
     border-radius: var(--radius-md);
     font-size: 0.875rem;
+    box-shadow: var(--shadow-surface);
 }
 
 .sheet-status p {
@@ -229,6 +235,15 @@ button:disabled {
 
 .sheet-status--error .sheet-status-dot {
     background: var(--color-feedback-warning);
+}
+
+.sheet-status--disconnected {
+    color: var(--clr-error);
+    background: color-mix(in srgb, var(--clr-error) 12%, white);
+}
+
+.sheet-status--disconnected .sheet-status-dot {
+    background: var(--clr-error);
 }
 
 .panel-title {
@@ -310,7 +325,7 @@ button:disabled {
     border-radius: var(--radius-md);
     background: var(--color-bg-secondary);
     font: inherit;
-    resize: vertical;
+    resize: none;
 }
 
 .preview-panel {
@@ -323,17 +338,21 @@ button:disabled {
 .svg-preview {
     display: grid;
     place-items: center;
+    align-self: center;
+    justify-self: center;
+    width: min(100%, 520px);
+    aspect-ratio: 4 / 5;
     min-height: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-secondary);
     overflow: hidden;
 }
 
 .svg-preview svg {
     display: block;
-    width: min(100%, 520px);
-    height: auto;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-bg-secondary);
+    width: 100%;
+    height: 100%;
 }
 
 .svg-preview text[data-field]:hover {
@@ -345,7 +364,7 @@ button:disabled {
 }
 
 .button {
-    min-height: calc(var(--space-6) + var(--space-2));
+    height: calc(var(--space-6) + var(--space-2));
     display: inline-flex;
     align-items: center;
     justify-content: center;

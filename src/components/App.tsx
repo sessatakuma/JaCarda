@@ -64,6 +64,10 @@ export function App(): JSX.Element {
         cards[0] ??
         sampleCards[0];
     const previewSvg = renderVocabCard(selectedCard);
+    const sheetStatusState =
+        connectionState === 'ready' && !sheetUrl
+            ? 'disconnected'
+            : connectionState;
 
     useEffect(() => {
         if (sheetUrl) {
@@ -305,24 +309,6 @@ export function App(): JSX.Element {
                 <section className='studio-shell' aria-label='Card studio'>
                     <div className='studio-grid'>
                         <aside className='row-panel' aria-label='Sheet rows'>
-                            <div
-                                className={`sheet-status sheet-status--${connectionState}`}
-                            >
-                                <span
-                                    className='sheet-status-dot'
-                                    aria-hidden='true'
-                                />
-                                <p>{connectionMessage}</p>
-                                <AppButton
-                                    ariaLabel='Sheet settings'
-                                    className='sheet-settings-button'
-                                    icon={<Settings size={18} />}
-                                    variant='ghost'
-                                    onClick={() => {
-                                        setIsDialogOpen(true);
-                                    }}
-                                />
-                            </div>
                             <PanelTitle>Sheet</PanelTitle>
                             <div className='row-list'>
                                 {unusedCards.map((card, index) => (
@@ -369,7 +355,7 @@ export function App(): JSX.Element {
                                 />
                             </label>
                             <label className='edit-field'>
-                                <span>Phrase / reading</span>
+                                <span>Phrase + Furigana</span>
                                 <input
                                     value={formatPhraseWithReading(
                                         selectedCard
@@ -413,7 +399,7 @@ export function App(): JSX.Element {
                                     void saveEditedCard();
                                 }}
                             >
-                                {isSaving ? 'Saving...' : 'Save edits'}
+                                {isSaving ? 'Saving...' : 'Save edit to sheet'}
                             </AppButton>
                             {usedMessage ? (
                                 <p className='used-message'>{usedMessage}</p>
@@ -438,7 +424,6 @@ export function App(): JSX.Element {
                                     void downloadCurrentPng();
                                 }}
                             >
-                                <Download size={20} aria-hidden='true' />
                                 {isDownloading
                                     ? 'Downloading...'
                                     : 'Download PNG'}
@@ -448,6 +433,19 @@ export function App(): JSX.Element {
                 </section>
             </main>
             <Footer />
+            <div className={`sheet-status sheet-status--${sheetStatusState}`}>
+                <span className='sheet-status-dot' aria-hidden='true' />
+                <p>{connectionMessage}</p>
+                <AppButton
+                    ariaLabel='Sheet settings'
+                    className='sheet-settings-button'
+                    icon={<Settings size={18} aria-hidden='true' />}
+                    variant='ghost'
+                    onClick={() => {
+                        setIsDialogOpen(true);
+                    }}
+                />
+            </div>
 
             {isDialogOpen ? (
                 <div className='sheet-dialog-backdrop'>
