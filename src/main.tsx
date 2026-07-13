@@ -1,5 +1,4 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactDOM from 'react-dom/client';
 
 import { App } from './components/App.js';
@@ -15,12 +14,8 @@ if (rootElement === null) {
 
 await i18nReady;
 
-const queryClient = new QueryClient();
-
 ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <App />
-        </QueryClientProvider>
+        <App />
     </React.StrictMode>
 );

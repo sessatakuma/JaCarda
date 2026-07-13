@@ -26,7 +26,6 @@
         ]
     },
     "dependencies": {
-        "@tanstack/react-query": "5.100.11",
         "i18next": "^26.3.1",
         "lucide-react": "0.554.0",
         "react": "19.2.6",
